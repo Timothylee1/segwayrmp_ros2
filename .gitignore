@@ -1,0 +1,8 @@
+# Files to ignore
+# Visual studio code stuff
+*.vscode
+
+build/
+log/
+install/
+bin/
