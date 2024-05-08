@@ -8,13 +8,13 @@
 
 odometry::odometry() { init(); }
 
-void odometry::estimate(SensorData *rawdata) {
+void odometry::estimate(OdometryData *rawdata) {
   m_num_out++;
   int lefttick = rawdata->ticks.leftTicks;
   int righttick = rawdata->ticks.rightTicks;
   int64_t ts_ticks = rawdata->ticks.TimeStamp;
   double omegaImu = rawdata->baseImu.baseYaw;
-  int64_t ts_imu = rawdata->baseImu.TimeStamp;
+  // int64_t ts_imu = rawdata->baseImu.TimeStamp;
   m_current_ts = ts_ticks;
   if (!m_isInit)
     return;
@@ -182,7 +182,7 @@ void odometry::init() {
     std::string slipTest_data_record_dir =
         m_record_file_path + std::string(dt) + "/";
     cmd_str_mk = "mkdir -p \"" + slipTest_data_record_dir + "\"";
-    bool system_flag = system(cmd_str_mk.c_str());
+    // bool system_flag = system(cmd_str_mk.c_str());
     std::string file_path = slipTest_data_record_dir + "pose.txt";
     RCLCPP_INFO_STREAM(rclcpp::get_logger("odometry"),
                        "file_path: " << file_path);
@@ -190,7 +190,7 @@ void odometry::init() {
   }
 }
 
-bool odometry::add_imubase(SensorData::BaseImu &imudata) {
+bool odometry::add_imubase(OdometryData::BaseImu &imudata) {
   bool res_flag = false;
   m_imu_record_.imu_buffer_.push_back(imudata);
   if (m_imu_record_.first) {
@@ -205,7 +205,7 @@ bool odometry::add_imubase(SensorData::BaseImu &imudata) {
   return res_flag;
 }
 
-bool odometry::add_ticks(SensorData::Ticks &ticksdata) {
+bool odometry::add_ticks(OdometryData::Ticks &ticksdata) {
   bool flag = false;
   if (m_imu_record_.imu_buffer_.empty() ||
       ticksdata.TimeStamp < m_imu_record_.imu_buffer_.front().TimeStamp) {
@@ -214,7 +214,7 @@ bool odometry::add_ticks(SensorData::Ticks &ticksdata) {
                           << ": the ticks is elear than imu");
   } else if (ticksdata.TimeStamp <=
              m_imu_record_.imu_buffer_.back().TimeStamp) {
-    SensorData::BaseImu base_imu =
+    OdometryData::BaseImu base_imu =
         m_imu_record_.getAverageImu(ticksdata.TimeStamp);
     estimate(created(base_imu, ticksdata));
     flag = true;
@@ -224,9 +224,9 @@ bool odometry::add_ticks(SensorData::Ticks &ticksdata) {
   return flag;
 }
 
-SensorData *odometry::created(SensorData::BaseImu &imudata,
-                                         SensorData::Ticks &ticksdata) {
-  SensorData *new_sensordata = new SensorData();
+OdometryData *odometry::created(OdometryData::BaseImu &imudata,
+                                         OdometryData::Ticks &ticksdata) {
+  OdometryData *new_sensordata = new OdometryData();
   new_sensordata->baseImu = imudata;
   new_sensordata->ticks = ticksdata;
   return new_sensordata;

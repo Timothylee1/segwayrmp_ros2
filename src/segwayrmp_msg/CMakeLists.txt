@@ -15,17 +15,20 @@ find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-set(srv_files
+# set(msg_files
+#   "msg/BatteryState.msg"
+# )
 
-  "srv/SetChassisControl.srv"
-  "srv/EnableChassisRotation.srv"
-)
+# set(srv_files
+#   "srv/SetChassisControl.srv"
+#   "srv/EnableChassisRotation.srv"
+# )
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  ${msg_files} ${srv_files} ${action_files}
-  DEPENDENCIES
-  std_msgs
-)
+# rosidl_generate_interfaces(${PROJECT_NAME}
+#   ${msg_files} ${srv_files} ${action_files}
+#   DEPENDENCIES
+#   std_msgs
+# )
 
 ament_export_dependencies(rosidl_default_runtime)
 

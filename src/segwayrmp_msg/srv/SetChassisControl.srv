@@ -1,3 +1,0 @@
-bool   set_chassis_control
----
-uint8   chassis_control_result

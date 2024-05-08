@@ -2,8 +2,8 @@
 // Created by efan on 3/19/20.
 //
 
-#ifndef GE_ENCODER_ANSYS_GE_ENCODER_ODOMETRY_HPP
-#define GE_ENCODER_ANSYS_GE_ENCODER_ODOMETRY_HPP
+#ifndef ODOMETRY_HPP
+#define ODOMETRY_HPP
 
 #include <fstream>
 #include <queue>
@@ -17,16 +17,16 @@
 
 class ImuRecord {
  public:
-  std::vector<SensorData::BaseImu> imu_buffer_;
+  std::vector<OdometryData::BaseImu> imu_buffer_;
   bool first = true;
-  SensorData::BaseImu getAverageImu(int64_t ts) {
-    std::vector<SensorData::BaseImu>::reverse_iterator i = imu_buffer_.rbegin();
+  OdometryData::BaseImu getAverageImu(int64_t ts) {
+    std::vector<OdometryData::BaseImu>::reverse_iterator i = imu_buffer_.rbegin();
     while (i != imu_buffer_.rend() && i->TimeStamp > ts) {
       ++i;
     }
     double yaw_sum_ = 0;
     int64_t time_gap_ = 0;
-    SensorData::BaseImu imu_after = *i;
+    OdometryData::BaseImu imu_after = *i;
     if (i != imu_buffer_.rend()) ++i;
     for (; i != imu_buffer_.rend(); ++i) {
       yaw_sum_ += (i->baseYaw + imu_after.baseYaw) / 2 *
@@ -34,15 +34,15 @@ class ImuRecord {
       time_gap_ += imu_after.TimeStamp - i->TimeStamp;
     }
     if (i != imu_buffer_.rend() && ts != i->TimeStamp) {
-      std::vector<SensorData::BaseImu>::reverse_iterator j = i;
+      std::vector<OdometryData::BaseImu>::reverse_iterator j = i;
       j--;
-      SensorData::BaseImu imu_suanz = i->Interpolation(ts, *i, *j);
+      OdometryData::BaseImu imu_suanz = i->Interpolation(ts, *i, *j);
       yaw_sum_ += (i->baseYaw + imu_suanz.baseYaw) / 2 *
                   (imu_suanz.TimeStamp - i->TimeStamp);
       time_gap_ += imu_suanz.TimeStamp - i->TimeStamp;
     }
     if (time_gap_ == 0) return imu_buffer_.back();
-    SensorData::BaseImu res_imu(ts, yaw_sum_ / time_gap_);
+    OdometryData::BaseImu res_imu(ts, yaw_sum_ / time_gap_);
     imu_buffer_.clear();
     imu_buffer_.push_back(res_imu);
     return res_imu;
@@ -59,14 +59,14 @@ class odometry {
    * This function is called when imu data is obtained
    * If the function returns true, call function GetOdometry()
    * */
-  bool add_imubase(SensorData::BaseImu &imudata);
+  bool add_imubase(OdometryData::BaseImu &imudata);
   /**
    * Author: efan
    * \brief: interface function
    * This function is called when ticks data is obtained
    * If the function returns true, call function GetOdometry()
    * */
-  bool add_ticks(SensorData::Ticks &ticksdata);
+  bool add_ticks(OdometryData::Ticks &ticksdata);
   /**
    * Author: efan
    * \brief: interface function
@@ -74,13 +74,13 @@ class odometry {
    * */
   Odometry GetOdometry();
 
-  SensorData *created(SensorData::BaseImu &imudata,
-                      SensorData::Ticks &ticksdata);
+  OdometryData *created(OdometryData::BaseImu &imudata,
+                      OdometryData::Ticks &ticksdata);
 
   int m_num_out = 0;
 
  private:
-  void estimate(SensorData *rawdata);
+  void estimate(OdometryData *rawdata);
   void init();
 
   double m_omegaImu_bias = -0.00016859;
@@ -106,7 +106,7 @@ class odometry {
   std::string m_record_file_path;
 
   ImuRecord m_imu_record_;
-  std::queue<SensorData::Ticks> m_futureTicks_;
+  std::queue<OdometryData::Ticks> m_futureTicks_;
 };
 
-#endif  // GE_ENCODER_ANSYS_GE_ENCODER_ODOMETRY_HPP
+#endif  // ODOMETRY_HPP

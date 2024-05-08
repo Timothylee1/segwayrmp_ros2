@@ -37,7 +37,7 @@ include_directories(
 add_executable(segwayrmp_base_node
   src/segwayrmp_base_node.cpp
   src/segwayrmp_base_ros.cpp
-  # src/odometry.cpp
+  src/odometry.cpp
 )
 
 ament_target_dependencies(segwayrmp_base_node

@@ -1,47 +1,49 @@
-#ifndef _ROBOT_HPP
-#define _ROBOT_HPP
+#ifndef SEGWAYRMP_BASE_ROS_HPP
+#define SEGWAYRMP_BASE_ROS_HPP
 
 #include <geometry_msgs/msg/twist.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/battery_state.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 
-#include "segwayrmp_msg/srv/enable_chassis_rotation.hpp"
-#include "segwayrmp_msg/srv/set_chassis_control.hpp"
-// #include "odometry.hpp"
 #include "comm_ctrl_navigation.hpp"
-
-#define IAP_STATE_COMPLETE 3
-#define IAP_STATE_FAIL 4
-#define IAP_STATE_ABORT 5
+#include "odometry.hpp"
 
 namespace westonrobot {
 
-class Chassis : public rclcpp::Node {
+class Segwayrmp : public rclcpp::Node {
 public:
-  Chassis(const rclcpp::Node::SharedPtr &nh_);
+  Segwayrmp(std::string node_name);
 
   bool Initialize(void);
   void Run(void);
   void Stop(void);
+  void PublishBatteryState(void);
 
 private:
-  void CommandVelocityCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
+  bool keep_running_;
 
-  rclcpp::Node::SharedPtr nh_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
 
-  bool ChassisRotationCallback(
-      segwayrmp_msg::srv::EnableChassisRotation::Request const &req,
-      segwayrmp_msg::srv::EnableChassisRotation::Response &res);
+  rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr batt_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+  rclcpp::Publisher<tf2_ros::TransformBroadcaster>::SharedPtr odom_broadcaster_;
 
-  rclcpp::Service<segwayrmp_msg::srv::EnableChassisRotation>::SharedPtr
-      enable_chassis_rotation_srv;
+  sensor_msgs::msg::Imu ros_imu_;
+  nav_msgs::msg::Odometry ros_odom_;
+  geometry_msgs::msg::TransformStamped odom_transform_;
 
-  bool keep_running_;
+  void PublishImuState(void);
+  // void PubOdomToRosOdom(Odometry odom_data);
+  void CommandVelocityCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
+
+  // s_aprctrl_event_t event_data_;
+  // odometry odometry_;
 };
 
 } // namespace westonrobot
