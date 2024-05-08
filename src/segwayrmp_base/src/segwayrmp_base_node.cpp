@@ -1,14 +1,14 @@
 #include "rclcpp/rclcpp.hpp"
-#include "segwayrmp_base/robot.hpp"
+#include "segwayrmp_base/segwayrmp_base_ros.hpp"
 
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<rclcpp::Node>("SmartCar");
+  auto node = std::make_shared<rclcpp::Node>("segwayrmp_base_node");
   auto node_params =
-      node->declare_parameter<std::string>("RMPSmartCarSerial", "ttyUSB0");
+      node->declare_parameter<std::string>("segwayrmp_base_node", "ttyUSB0");
 
   if (node_params != "ttyUSB0") {
-    printf("RMPSmartCarSerial: %s\n", node_params.c_str());
+    printf("segwayrmp_base_node: %s\n", node_params.c_str());
     set_smart_car_serial(node_params.c_str());
   }
 
@@ -22,8 +22,11 @@ int main(int argc, char **argv) {
     printf("init success!\n");
   }
 
-  robot::Chassis sbv(node);
+  set_enable_ctrl(1);
+  westonrobot::Chassis sbv(node);
 
+  enable_rotate_switch(1);
+  // sbv.Run();
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;

@@ -12,7 +12,6 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 
 # ros2
 find_package(rclcpp REQUIRED)
@@ -29,20 +28,19 @@ find_package(action_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
-
-ament_export_dependencies(rosidl_default_runtime)
+find_package(segwayrmp_msg REQUIRED)
 
 include_directories(
   include
 )
 
-add_executable(SmartCar
-  src/SmartCar.cpp
-  src/robot.cpp
-  # src/Ge_encoder_odometry.cpp
+add_executable(segwayrmp_base_node
+  src/segwayrmp_base_node.cpp
+  src/segwayrmp_base_ros.cpp
+  # src/odometry.cpp
 )
 
-ament_target_dependencies(SmartCar
+ament_target_dependencies(segwayrmp_base_node
   "rclcpp"
   "rclcpp_action"
   "rclcpp_components"
@@ -55,16 +53,17 @@ ament_target_dependencies(SmartCar
   "geometry_msgs"
   "tf2_geometry_msgs"
   "builtin_interfaces"
+  segwayrmp_msg
 )
 
 # Link libraries
 message( "project source dir " ${PROJECT_SOURCE_DIR} )
-target_link_libraries(SmartCar
+target_link_libraries(segwayrmp_base_node
   ${PROJECT_SOURCE_DIR}/lib/libctrl_x86_64.so
 )
 
 # Install the executable
-install(TARGETS SmartCar 
+install(TARGETS segwayrmp_base_node 
   DESTINATION lib/${PROJECT_NAME}
 )
 

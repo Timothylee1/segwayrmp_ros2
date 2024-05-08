@@ -1,0 +1,3 @@
+bool   enable_chassis_rotation
+---
+int16   enable_chassis_rotation_result    #0:success; others: coutdown remaining time(seconds)
