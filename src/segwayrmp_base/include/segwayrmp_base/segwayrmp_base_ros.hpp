@@ -32,7 +32,7 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr batt_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
-  rclcpp::Publisher<tf2_ros::TransformBroadcaster>::SharedPtr odom_broadcaster_;
+  // rclcpp::Publisher<tf2_ros::TransformBroadcaster>::SharedPtr odom_broadcaster_;
 
   sensor_msgs::msg::Imu ros_imu_;
   nav_msgs::msg::Odometry ros_odom_;
