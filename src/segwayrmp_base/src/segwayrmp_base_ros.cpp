@@ -80,7 +80,6 @@ void Segwayrmp::PublishBatteryState(void) {
   batt_msg.percentage = static_cast<float>(get_bat_soc());
   batt_msg.temperature = static_cast<float>(get_bat_temp());
   batt_msg.voltage = static_cast<float>(get_bat_mvol()) / 1000;
-
   batt_pub_->publish(batt_msg);
 }
 
@@ -89,18 +88,22 @@ void Segwayrmp::PublishImuState(void) {
       ImuGyr_TimeStamp > ImuAcc_TimeStamp ? ImuGyr_TimeStamp : ImuAcc_TimeStamp;
   ros_imu_.header.stamp = TimeStamp(imu_stamp);
   ros_imu_.header.frame_id = "robot_imu";
-  ros_imu_.angular_velocity.x =
-      (double)ImuGyrData.gyr[0] / 900.0; //* imu_angular_vel_;
-  ros_imu_.angular_velocity.y =
-      (double)ImuGyrData.gyr[1] / 900.0; //* imu_angular_vel_;
-  ros_imu_.angular_velocity.z =
-      (double)ImuGyrData.gyr[2] / 900.0; //* imu_angular_vel_;
-  ros_imu_.linear_acceleration.x =
-      (double)ImuAccData.acc[0] / 4000.0 * 9.8; // * imu_linear_vel_;
-  ros_imu_.linear_acceleration.y =
-      (double)ImuAccData.acc[1] / 4000.0 * 9.8; // * imu_linear_vel_;
-  ros_imu_.linear_acceleration.z =
-      (double)ImuAccData.acc[2] / 4000.0 * 9.8; // * imu_linear_vel_;
+  ros_imu_.angular_velocity.x = (double)ImuGyrData.gyr[0] / 900.0;
+  ros_imu_.angular_velocity.y = (double)ImuGyrData.gyr[1] / 900.0;
+  ros_imu_.angular_velocity.z = (double)ImuGyrData.gyr[2] / 900.0;
+  ros_imu_.linear_acceleration.x = (double)ImuAccData.acc[0] / 4000.0 * 9.81;
+  ros_imu_.linear_acceleration.y = (double)ImuAccData.acc[1] / 4000.0 * 9.81;
+  ros_imu_.linear_acceleration.z = (double)ImuAccData.acc[2] / 4000.0 * 9.81;
+  // Populate angular velocity covariance
+  for (size_t i = 0; i < 9; ++i) {
+    // Set diagonal elements to non-zero values, and others to zero
+    ros_imu_.angular_velocity_covariance[i] = (i % 4 == 0) ? 0.1 : 0.0;
+  }
+
+  // Populate linear acceleration covariance
+  ros_imu_.linear_acceleration_covariance[0] = 0.25;
+  ros_imu_.linear_acceleration_covariance[4] = 0.1;
+  ros_imu_.linear_acceleration_covariance[8] = 0.15;
   imu_pub_->publish(ros_imu_);
 }
 
@@ -112,54 +115,43 @@ rclcpp::Time Segwayrmp::TimeStamp(int64_t timestamp) {
 
 void Segwayrmp::PublishOdomImuData(StampedBasicFrame *frame) {
   if (frame->type_id == Chassis_Data_Motors_Speed) {
-    memcpy(&motorsSpeedData, frame->data,
-           sizeof(motorsSpeedData));
+    memcpy(&motorsSpeedData, frame->data, sizeof(motorsSpeedData));
     Speed_TimeStamp = frame->timestamp;
     Speed_update |= 1;
   } else if (frame->type_id == Chassis_Data_Car_Speed) {
-    memcpy(&carSpeedData, frame->data,
-           sizeof(carSpeedData));
+    memcpy(&carSpeedData, frame->data, sizeof(carSpeedData));
     Speed_TimeStamp = frame->timestamp;
     Speed_update |= 2;
   } else if (frame->type_id == Chassis_Data_Front_Ticks) {
-    memcpy(&frontTicksData, frame->data,
-           sizeof(frontTicksData));
+    memcpy(&frontTicksData, frame->data, sizeof(frontTicksData));
     Ticks_TimeStamp = frame->timestamp;
     Ticks_update |= 1;
   } else if (frame->type_id == Chassis_Data_Rear_Ticks) {
-    memcpy(&rearTicksData, frame->data,
-           sizeof(rearTicksData));
+    memcpy(&rearTicksData, frame->data, sizeof(rearTicksData));
     Ticks_TimeStamp = frame->timestamp;
     Ticks_update |= 2;
   } else if (frame->type_id == Chassis_Data_Imu_Gyr) {
-    memcpy(&ImuGyrData, frame->data,
-           sizeof(ImuGyrData));
+    memcpy(&ImuGyrData, frame->data, sizeof(ImuGyrData));
     ImuGyr_TimeStamp = frame->timestamp;
     ImuGyr_update = 1;
   } else if (frame->type_id == Chassis_Data_Imu_Acc) {
-    memcpy(&ImuAccData, frame->data,
-           sizeof(ImuAccData));
+    memcpy(&ImuAccData, frame->data, sizeof(ImuAccData));
     ImuAcc_TimeStamp = frame->timestamp;
     ImuAcc_update = 1;
   } else if (frame->type_id == Chassis_Data_Odom_Pose_xy) {
-    memcpy(&OdomPoseXy, frame->data,
-           sizeof(OdomPoseXy));
+    memcpy(&OdomPoseXy, frame->data, sizeof(OdomPoseXy));
     Odom_TimeStamp = frame->timestamp;
     Odom_update |= 1;
-    // ROS_INFO("odomPosX:%f, odomPosY:%f", OdomPoseXy.pos_x, OdomPoseXy.pos_y);
   } else if (frame->type_id == Chassis_Data_Odom_Euler_xy) {
-    memcpy(&OdomEulerXy, frame->data,
-           sizeof(OdomEulerXy));
+    memcpy(&OdomEulerXy, frame->data, sizeof(OdomEulerXy));
     Odom_TimeStamp = frame->timestamp;
     Odom_update |= 2;
   } else if (frame->type_id == Chassis_Data_Odom_Euler_z) {
-    memcpy(&OdomEulerZ, frame->data,
-           sizeof(OdomEulerZ));
+    memcpy(&OdomEulerZ, frame->data, sizeof(OdomEulerZ));
     Odom_TimeStamp = frame->timestamp;
     Odom_update |= 4;
   } else if (frame->type_id == Chassis_Data_Odom_Linevel_xy) {
-    memcpy(&OdomVelLineXy, frame->data,
-           sizeof(OdomVelLineXy));
+    memcpy(&OdomVelLineXy, frame->data, sizeof(OdomVelLineXy));
     Odom_TimeStamp = frame->timestamp;
     Odom_update |= 8;
   } else if (frame->type_id == Chassis_Data_Front_Encoder_Angle) {
