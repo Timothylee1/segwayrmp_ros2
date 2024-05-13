@@ -8,6 +8,7 @@
 #include <sensor_msgs/msg/battery_state.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <std_msgs/msg/string.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 
 #include "comm_ctrl_navigation.hpp"
@@ -32,18 +33,24 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr batt_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
-  // rclcpp::Publisher<tf2_ros::TransformBroadcaster>::SharedPtr
-  // odom_broadcaster_;
+  std::shared_ptr<tf2_ros::TransformBroadcaster> odom_broadcaster_;
+  std::shared_ptr<geometry_msgs::msg::TransformStamped> odom_transform_;
 
+  tf2::Quaternion quat_;
   sensor_msgs::msg::Imu ros_imu_;
   nav_msgs::msg::Odometry ros_odom_;
-  geometry_msgs::msg::TransformStamped odom_transform_;
+  geometry_msgs::msg::Quaternion odom_quat_;
 
   rclcpp::Time TimeStamp(int64_t timestamp);
 
+  double GetOrientationX(void);
+  double GetOrientationY(void);
+  double GetOrientationZ(void);
+  double GetOrientationW(void);
+
   void PublishImuState(void);
-  static void PublishOdomImuData(StampedBasicFrame *frame);
-  // void PubOdomToRosOdom(Odometry odom_data);
+  void PublishImuOdomState(void);
+  static void OdomImuData(StampedBasicFrame *frame);
   void CommandVelocityCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
 
   s_aprctrl_datastamped_t timestamp_data;

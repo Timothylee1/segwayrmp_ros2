@@ -36,8 +36,7 @@ namespace westonrobot {
 
 Segwayrmp::Segwayrmp(std::string node_name)
     : Node(node_name), keep_running_(false) {
-
-  timestamp_data.on_new_data = PublishOdomImuData;
+  timestamp_data.on_new_data = OdomImuData;
   aprctrl_datastamped_jni_register(&timestamp_data);
 
   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
@@ -47,7 +46,6 @@ Segwayrmp::Segwayrmp(std::string node_name)
   batt_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>(
       "/battery_state", 10);
   imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
-  /* yet to do*/
   odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom", 10);
 }
 
@@ -68,10 +66,16 @@ void Segwayrmp::Run(void) {
   keep_running_ = true;
   while (keep_running_) {
     PublishBatteryState();
-    PublishImuState(); // Increase publishing rate
+    PublishImuOdomState(); // Increase publishing rate
     rclcpp::spin_some(shared_from_this());
     rate.sleep();
   }
+}
+
+rclcpp::Time Segwayrmp::TimeStamp(int64_t timestamp) {
+  uint32_t sec_ = timestamp / 1000000;
+  uint32_t nsec_ = (timestamp % 1000000) * 1000;
+  return rclcpp::Time(sec_, nsec_);
 }
 
 void Segwayrmp::PublishBatteryState(void) {
@@ -94,6 +98,7 @@ void Segwayrmp::PublishImuState(void) {
   ros_imu_.linear_acceleration.x = (double)ImuAccData.acc[0] / 4000.0 * 9.81;
   ros_imu_.linear_acceleration.y = (double)ImuAccData.acc[1] / 4000.0 * 9.81;
   ros_imu_.linear_acceleration.z = (double)ImuAccData.acc[2] / 4000.0 * 9.81;
+
   // Populate angular velocity covariance
   for (size_t i = 0; i < 9; ++i) {
     // Set diagonal elements to non-zero values, and others to zero
@@ -106,14 +111,63 @@ void Segwayrmp::PublishImuState(void) {
   ros_imu_.linear_acceleration_covariance[8] = 0.15;
   imu_pub_->publish(ros_imu_);
 }
+// timer...
+void Segwayrmp::PublishImuOdomState(void) {
+  if (ImuGyr_update == 1 && ImuAcc_update == 1) {
+    PublishImuState();
+    ImuGyr_update = 0;
+    ImuAcc_update = 0;
+  }
 
-rclcpp::Time Segwayrmp::TimeStamp(int64_t timestamp) {
-  uint32_t sec_ = timestamp / 1000000;
-  uint32_t nsec_ = (timestamp % 1000000) * 1000;
-  return rclcpp::Time(sec_, nsec_);
+  static uint64_t previous_time = 0;
+  if (Odom_update == 15) {
+    Odom_update = 0;
+
+    quat_.setRPY(0, 0, OdomEulerZ.euler_z / rad_to_deg_);
+    tf2::convert(quat_, odom_quat_);
+
+    ros_odom_.header.stamp = TimeStamp(Odom_TimeStamp);
+    ros_odom_.header.frame_id = "odom";
+    ros_odom_.pose.pose.position.x = OdomPoseXy.pos_x;
+    ros_odom_.pose.pose.position.y = OdomPoseXy.pos_y;
+    ros_odom_.pose.pose.position.z = 0;
+    ros_odom_.pose.pose.orientation.x = GetOrientationX();
+    ros_odom_.pose.pose.orientation.y = GetOrientationY();
+    ros_odom_.pose.pose.orientation.z = GetOrientationZ();
+    ros_odom_.pose.pose.orientation.w = GetOrientationW();
+    ros_odom_.child_frame_id = "base_link";
+    ros_odom_.twist.twist.linear.x =
+        (double)carSpeedData.car_speed / LINE_SPEED_TRANS_GAIN_MPS;
+    ros_odom_.twist.twist.linear.y = 0;
+    ros_odom_.twist.twist.linear.z = 0;
+    ros_odom_.twist.twist.angular.x = (double)ImuGyrData.gyr[0] / 900.0;
+    ros_odom_.twist.twist.angular.y = (double)ImuGyrData.gyr[1] / 900.0;
+    ros_odom_.twist.twist.angular.z = (double)ImuGyrData.gyr[2] / 900.0;
+
+    odom_transform_->header.stamp = TimeStamp(Odom_TimeStamp);
+    odom_transform_->header.frame_id = "odom";
+    odom_transform_->child_frame_id = "base_link";
+    odom_transform_->transform.translation.x = OdomPoseXy.pos_x;
+    odom_transform_->transform.translation.y = OdomPoseXy.pos_y;
+    odom_transform_->transform.translation.z = 0;
+    odom_transform_->transform.rotation = odom_quat_;
+    odom_broadcaster_->sendTransform((*odom_transform_.get()));
+    
+    std::cout << "After odom broadcaster\n";
+
+    if ((Odom_TimeStamp - previous_time) > 100000) {
+      static uint8_t first = 1;
+      if (first) {
+        first = 0;
+      }
+    }
+    previous_time = Odom_TimeStamp;
+    odom_pub_->publish(ros_odom_);
+  }
+  // ros::spinOnce();
 }
 
-void Segwayrmp::PublishOdomImuData(StampedBasicFrame *frame) {
+void Segwayrmp::OdomImuData(StampedBasicFrame *frame) {
   if (frame->type_id == Chassis_Data_Motors_Speed) {
     memcpy(&motorsSpeedData, frame->data, sizeof(motorsSpeedData));
     Speed_TimeStamp = frame->timestamp;
@@ -159,6 +213,70 @@ void Segwayrmp::PublishOdomImuData(StampedBasicFrame *frame) {
     FrontAxle_TimeStamp = frame->timestamp;
     FrontAxle_update = 1;
   }
+}
+
+double Segwayrmp::GetOrientationX(void) {
+  float x = OdomEulerXy.euler_x / rad_to_deg_ / 2.0;
+  float y = OdomEulerXy.euler_y / rad_to_deg_ / 2.0;
+  float z = OdomEulerZ.euler_z / rad_to_deg_ / 2.0;
+
+  float fCosHRoll = cos(x);
+  float fSinHRoll = sin(x);
+  float fCosHPitch = cos(y);
+  float fSinHPitch = sin(y);
+  float fCosHYaw = cos(z);
+  float fSinHYaw = sin(z);
+
+  return (fSinHRoll * fCosHPitch * fCosHYaw -
+          fCosHRoll * fSinHPitch * fSinHYaw);
+}
+
+double Segwayrmp::GetOrientationY(void) {
+  float x = OdomEulerXy.euler_x / rad_to_deg_ / 2.0;
+  float y = OdomEulerXy.euler_y / rad_to_deg_ / 2.0;
+  float z = OdomEulerZ.euler_z / rad_to_deg_ / 2.0;
+
+  float fCosHRoll = cos(x);
+  float fSinHRoll = sin(x);
+  float fCosHPitch = cos(y);
+  float fSinHPitch = sin(y);
+  float fCosHYaw = cos(z);
+  float fSinHYaw = sin(z);
+
+  return (fCosHRoll * fSinHPitch * fCosHYaw +
+          fSinHRoll * fCosHPitch * fSinHYaw);
+}
+
+double Segwayrmp::GetOrientationZ(void) {
+  float x = OdomEulerXy.euler_x / rad_to_deg_ / 2.0;
+  float y = OdomEulerXy.euler_y / rad_to_deg_ / 2.0;
+  float z = OdomEulerZ.euler_z / rad_to_deg_ / 2.0;
+
+  float fCosHRoll = cos(x);
+  float fSinHRoll = sin(x);
+  float fCosHPitch = cos(y);
+  float fSinHPitch = sin(y);
+  float fCosHYaw = cos(z);
+  float fSinHYaw = sin(z);
+
+  return (fCosHRoll * fCosHPitch * fSinHYaw -
+          fSinHRoll * fSinHPitch * fCosHYaw);
+}
+
+double Segwayrmp::GetOrientationW(void) {
+  float x = OdomEulerXy.euler_x / rad_to_deg_ / 2.0;
+  float y = OdomEulerXy.euler_y / rad_to_deg_ / 2.0;
+  float z = OdomEulerZ.euler_z / rad_to_deg_ / 2.0;
+
+  float fCosHRoll = cos(x);
+  float fSinHRoll = sin(x);
+  float fCosHPitch = cos(y);
+  float fSinHPitch = sin(y);
+  float fCosHYaw = cos(z);
+  float fSinHYaw = sin(z);
+
+  return (fCosHRoll * fCosHPitch * fCosHYaw +
+          fSinHRoll * fSinHPitch * fSinHYaw);
 }
 
 /* Callbacks */
