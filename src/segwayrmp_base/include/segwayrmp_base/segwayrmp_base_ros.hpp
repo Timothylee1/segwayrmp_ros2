@@ -5,8 +5,8 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 
@@ -32,17 +32,21 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr batt_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
-  // rclcpp::Publisher<tf2_ros::TransformBroadcaster>::SharedPtr odom_broadcaster_;
+  // rclcpp::Publisher<tf2_ros::TransformBroadcaster>::SharedPtr
+  // odom_broadcaster_;
 
   sensor_msgs::msg::Imu ros_imu_;
   nav_msgs::msg::Odometry ros_odom_;
   geometry_msgs::msg::TransformStamped odom_transform_;
 
+  rclcpp::Time TimeStamp(int64_t timestamp);
+
   void PublishImuState(void);
+  static void PublishOdomImuData(StampedBasicFrame *frame);
   // void PubOdomToRosOdom(Odometry odom_data);
   void CommandVelocityCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
 
-  // s_aprctrl_event_t event_data_;
+  s_aprctrl_datastamped_t timestamp_data;
   // odometry odometry_;
 };
 
