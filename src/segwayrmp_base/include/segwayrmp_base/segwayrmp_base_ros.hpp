@@ -26,23 +26,20 @@ public:
   void PublishBatteryState(void);
 
 private:
-  bool keep_running_;
-
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
 
-  rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr batt_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
-  std::shared_ptr<tf2_ros::TransformBroadcaster> odom_broadcaster_;
-  std::shared_ptr<geometry_msgs::msg::TransformStamped> odom_transform_;
+  rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr batt_pub_;
 
   tf2::Quaternion quat_;
   sensor_msgs::msg::Imu ros_imu_;
   nav_msgs::msg::Odometry ros_odom_;
   geometry_msgs::msg::Quaternion odom_quat_;
 
-  rclcpp::Time TimeStamp(int64_t timestamp);
+  rclcpp::Time Timestamp(int64_t timestamp);
 
+  bool ReadParameters(void);
   double GetOrientationX(void);
   double GetOrientationY(void);
   double GetOrientationZ(void);
@@ -53,8 +50,10 @@ private:
   static void OdomImuData(StampedBasicFrame *frame);
   void CommandVelocityCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
 
-  s_aprctrl_datastamped_t timestamp_data;
-  // odometry odometry_;
+  bool keep_running_;
+  float rad_to_deg_ = 57.2958;
+
+  s_aprctrl_datastamped_t timestamp_data_;
 };
 
 } // namespace westonrobot
