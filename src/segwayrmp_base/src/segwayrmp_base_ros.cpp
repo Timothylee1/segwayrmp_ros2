@@ -17,19 +17,19 @@ odom_euler_xy_t odom_euler_xy_;
 odom_vel_line_xy_t odom_velocity_xy_;
 namespace westonrobot {
 
-Segwayrmp::Segwayrmp(std::string node_name)
-    : Node(node_name), keep_running_(false) {
+Segwayrmp::Segwayrmp(rclcpp::Node *node) : node_(node), keep_running_(false) {
   timestamp_data_.on_new_data = OdomImuData;
   aprctrl_datastamped_jni_register(&timestamp_data_);
+  tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(node_);
 
-  cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+  cmd_vel_sub_ = node_->create_subscription<geometry_msgs::msg::Twist>(
       "/cmd_vel", 10,
       std::bind(&Segwayrmp::CommandVelocityCallback, this,
                 std::placeholders::_1));
-  batt_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>(
+  batt_pub_ = node_->create_publisher<sensor_msgs::msg::BatteryState>(
       "/battery_state", 10);
-  imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
-  odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom", 10);
+  imu_pub_ = node_->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
+  odom_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("/odom", 10);
 }
 
 bool Segwayrmp::Initialize(void) {
@@ -47,12 +47,13 @@ void Segwayrmp::Stop(void) { keep_running_ = false; }
 void Segwayrmp::Run(void) {
   rclcpp::Rate rate(3);
   keep_running_ = true;
-  while (keep_running_) {
+  while (keep_running_ && rclcpp::ok()) {
     PublishBatteryState();
     PublishImuOdomState();
-    rclcpp::spin_some(shared_from_this());
+    // rclcpp::spin_some();
     rate.sleep();
   }
+  rclcpp::shutdown();
 }
 
 rclcpp::Time Segwayrmp::Timestamp(int64_t timestamp) {
@@ -67,6 +68,7 @@ void Segwayrmp::PublishBatteryState(void) {
   batt_msg.percentage = static_cast<float>(get_bat_soc());
   batt_msg.temperature = static_cast<float>(get_bat_temp());
   batt_msg.voltage = static_cast<float>(get_bat_mvol()) / 1000;
+  batt_msg.current = static_cast<float>(get_bat_mcurrent()) / 1000;
   batt_pub_->publish(batt_msg);
 }
 
@@ -75,7 +77,7 @@ void Segwayrmp::PublishImuState(void) {
                            ? imu_gyroscope_timestamp_
                            : imu_acceleration_timestamp_;
   ros_imu_.header.stamp = Timestamp(imu_stamp);
-  ros_imu_.header.frame_id = "robot_imu";
+  ros_imu_.header.frame_id = "imu";
   ros_imu_.angular_velocity.x = (double)imu_gyroscope_data_.gyr[0] / 900.0;
   ros_imu_.angular_velocity.y = (double)imu_gyroscope_data_.gyr[1] / 900.0;
   ros_imu_.angular_velocity.z = (double)imu_gyroscope_data_.gyr[2] / 900.0;
@@ -92,6 +94,12 @@ void Segwayrmp::PublishImuState(void) {
     ros_imu_.angular_velocity_covariance[i] = (i % 4 == 0) ? 0.1 : 0.0;
   }
 
+  // Populate linear velocity covariance
+  for (size_t i = 0; i < 9; ++i) {
+    // Set diagonal elements to non-zero values, and others to zero
+    ros_imu_.linear_acceleration_covariance[i] = (i % 4 == 0) ? 0.15 : 0.0;
+  }
+
   imu_pub_->publish(ros_imu_);
 }
 
@@ -105,13 +113,14 @@ void Segwayrmp::PublishImuOdomState(void) {
     odom_update_ = 0;
 
     quat_.setRPY(0, 0, odom_euler_z_.euler_z / rad_to_deg_);
+    // odom_quat_ = tf2::toMsg(quat_);
     tf2::convert(quat_, odom_quat_);
 
     ros_odom_.header.stamp = Timestamp(odom_timestamp_);
     ros_odom_.header.frame_id = "odom";
     ros_odom_.pose.pose.position.x = odom_pose_xy_.pos_x;
     ros_odom_.pose.pose.position.y = odom_pose_xy_.pos_y;
-    ros_odom_.pose.pose.position.z = 0;
+    ros_odom_.pose.pose.position.z = 0.0;
     ros_odom_.pose.pose.orientation.x = GetOrientationX();
     ros_odom_.pose.pose.orientation.y = GetOrientationY();
     ros_odom_.pose.pose.orientation.z = GetOrientationZ();
@@ -119,14 +128,24 @@ void Segwayrmp::PublishImuOdomState(void) {
     ros_odom_.child_frame_id = "base_link";
     ros_odom_.twist.twist.linear.x =
         (double)speed_data_.car_speed / LINE_SPEED_TRANS_GAIN_MPS;
-    ros_odom_.twist.twist.linear.y = 0;
-    ros_odom_.twist.twist.linear.z = 0;
+    ros_odom_.twist.twist.linear.y = 0.0;
+    ros_odom_.twist.twist.linear.z = 0.0;
     ros_odom_.twist.twist.angular.x =
         (double)imu_gyroscope_data_.gyr[0] / 900.0;
     ros_odom_.twist.twist.angular.y =
         (double)imu_gyroscope_data_.gyr[1] / 900.0;
     ros_odom_.twist.twist.angular.z =
         (double)imu_gyroscope_data_.gyr[2] / 900.0;
+
+    geometry_msgs::msg::TransformStamped tf_msg;
+    tf_msg.header.stamp = Timestamp(odom_timestamp_);
+    tf_msg.header.frame_id = "odom";
+    tf_msg.child_frame_id = "base_link";
+    tf_msg.transform.translation.x = odom_pose_xy_.pos_x;
+    tf_msg.transform.translation.y = odom_pose_xy_.pos_y;
+    tf_msg.transform.translation.z = 0.0;
+    tf_msg.transform.rotation = odom_quat_;
+    tf_broadcaster_->sendTransform(tf_msg);
 
     odom_pub_->publish(ros_odom_);
   }
@@ -232,7 +251,7 @@ void Segwayrmp::CommandVelocityCallback(
     const geometry_msgs::msg::Twist::SharedPtr msg) {
   double angular_vel = msg->angular.z;
   double linear_vel = msg->linear.x;
-  RCLCPP_DEBUG(this->get_logger(),
+  RCLCPP_DEBUG(node_->get_logger(),
                "Received Twist message: linear.x= %f, angular.z= %f",
                linear_vel, angular_vel);
 

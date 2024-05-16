@@ -1,16 +1,16 @@
 #include "rclcpp/rclcpp.hpp"
 #include "segwayrmp_base/segwayrmp_base_ros.hpp"
 
-std::shared_ptr<westonrobot::Segwayrmp> robot;
-
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
-  robot = std::make_shared<westonrobot::Segwayrmp>("segwayrmp_base_node");
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("segwayrmp_base_node");
+  westonrobot::Segwayrmp segwayrmp(node.get());
 
-  if (robot->Initialize()) {
+  if (segwayrmp.Initialize()) {
     printf("Segwayrmp initialized, start running...\n");
-    robot->Run();
+    segwayrmp.Run();
   }
+
 
   return 0;
 }
