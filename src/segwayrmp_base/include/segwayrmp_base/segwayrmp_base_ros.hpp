@@ -22,7 +22,6 @@ public:
 
   bool Initialize(void);
   void Run(void);
-  void Stop(void);
   void PublishBatteryState(void);
 
 private:
@@ -33,7 +32,7 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr batt_pub_;
 
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-  
+
   rclcpp::Node *node_;
   tf2::Quaternion quat_;
   sensor_msgs::msg::Imu ros_imu_;
@@ -48,12 +47,12 @@ private:
   double GetOrientationZ(void);
   double GetOrientationW(void);
 
+  void TfBroadcaster(void);
   void PublishImuState(void);
   void PublishImuOdomState(void);
   static void OdomImuData(StampedBasicFrame *frame);
   void CommandVelocityCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
 
-  bool keep_running_;
   float rad_to_deg_ = 57.2958;
 
   s_aprctrl_datastamped_t timestamp_data_;
