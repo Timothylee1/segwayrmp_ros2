@@ -153,10 +153,9 @@ void Segwayrmp::TfBroadcaster(void) {
   base_link_to_base_footprint_msg.header.stamp = Timestamp(odom_timestamp_);
   base_link_to_base_footprint_msg.header.frame_id = "base_link";
   base_link_to_base_footprint_msg.child_frame_id = "base_footprint";
-  base_link_to_base_footprint_msg.transform.translation.x = 0.67; // Full length
-  base_link_to_base_footprint_msg.transform.translation.y = 0.30; // Half width
-  base_link_to_base_footprint_msg.transform.translation.z =
-      -0.20; // Ground to back of robot (where imu is)
+  base_link_to_base_footprint_msg.transform.translation.x = 0.0;
+  base_link_to_base_footprint_msg.transform.translation.y = 0.0;
+  base_link_to_base_footprint_msg.transform.translation.z = -0.20;
   base_link_to_base_footprint_msg.transform.rotation.w = 1.0;
   tf_broadcaster_->sendTransform(base_link_to_base_footprint_msg);
 
@@ -164,7 +163,7 @@ void Segwayrmp::TfBroadcaster(void) {
   base_link_to_imu_link_msg.header.stamp =
       Timestamp(imu_acceleration_timestamp_);
   base_link_to_imu_link_msg.header.frame_id = "base_link";
-  base_link_to_imu_link_msg.child_frame_id = "imu_link";
+  base_link_to_imu_link_msg.child_frame_id = "imu";
   base_link_to_imu_link_msg.transform.translation.x = 0.0;
   base_link_to_imu_link_msg.transform.translation.y = 0.0;
   base_link_to_imu_link_msg.transform.translation.z = 0.0;
@@ -175,9 +174,9 @@ void Segwayrmp::TfBroadcaster(void) {
   base_link_to_lidar_link_msg.header.stamp =
       Timestamp(imu_acceleration_timestamp_);
   base_link_to_lidar_link_msg.header.frame_id = "base_link";
-  base_link_to_lidar_link_msg.child_frame_id = "lidar_link";
-  base_link_to_lidar_link_msg.transform.translation.x = 0.33; // Half length
-  base_link_to_lidar_link_msg.transform.translation.y = 0.15; // Half width
+  base_link_to_lidar_link_msg.child_frame_id = "laser";
+  base_link_to_lidar_link_msg.transform.translation.x = 0.34;
+  base_link_to_lidar_link_msg.transform.translation.y = 0.0;
   base_link_to_lidar_link_msg.transform.translation.z = 0.08;
   base_link_to_lidar_link_msg.transform.rotation.w = 1.0;
   tf_broadcaster_->sendTransform(base_link_to_lidar_link_msg);
