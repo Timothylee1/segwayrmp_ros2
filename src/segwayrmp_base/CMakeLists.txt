@@ -57,13 +57,14 @@ ament_target_dependencies(segwayrmp_base_node
 )
 
 # Link libraries
-message( "project source dir " ${PROJECT_SOURCE_DIR} )
 target_link_libraries(segwayrmp_base_node
-  ${PROJECT_SOURCE_DIR}/lib/libctrl_x86_64.so
+  # Use 'libctrl_x86_64' or 'libctrl_arm64-v8a.so' 
+  # depending on your system architecture
+  ${PROJECT_SOURCE_DIR}/lib/libctrl_arm64-v8a.so
 )
 
 # Install the executable
-install(TARGETS segwayrmp_base_node 
+install(TARGETS segwayrmp_base_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -72,9 +73,11 @@ install(DIRECTORY launch lib
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+
   # the following line skips the linter which checks for copyrights
   # comment the line when a copyright and license is added to all source files
   set(ament_cmake_copyright_FOUND TRUE)
+
   # the following line skips cpplint (only works in a git repo)
   # comment the line when this package is in a git repo and when
   # a copyright and license is added to all source files
@@ -84,4 +87,3 @@ endif()
 
 ament_package()
 
-# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/timothy/segwayrmp_ros2/src/segwayrmp_base/lib
