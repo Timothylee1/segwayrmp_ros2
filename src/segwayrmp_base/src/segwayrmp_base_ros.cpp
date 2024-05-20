@@ -17,7 +17,7 @@ odom_euler_xy_t odom_euler_xy_;
 odom_vel_line_xy_t odom_velocity_xy_;
 namespace westonrobot {
 
-Segwayrmp::Segwayrmp(rclcpp::Node *node) : node_(node), keep_running_(false) {
+Segwayrmp::Segwayrmp(rclcpp::Node *node) : node_(node) {
   timestamp_data_.on_new_data = OdomImuData;
   aprctrl_datastamped_jni_register(&timestamp_data_);
   tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(node_);
@@ -42,14 +42,12 @@ bool Segwayrmp::Initialize(void) {
   return true;
 }
 
-void Segwayrmp::Stop(void) { keep_running_ = false; }
-
 void Segwayrmp::Run(void) {
   rclcpp::Rate rate(3);
-  keep_running_ = true;
-  while (keep_running_ && rclcpp::ok()) {
+  while (rclcpp::ok()) {
     PublishBatteryState();
     PublishImuOdomState();
+    TfBroadcaster();
     // rclcpp::spin_some();
     rate.sleep();
   }
@@ -65,6 +63,7 @@ rclcpp::Time Segwayrmp::Timestamp(int64_t timestamp) {
 void Segwayrmp::PublishBatteryState(void) {
   sensor_msgs::msg::BatteryState batt_msg;
   batt_msg.present = get_bat_soc() ? true : false;
+  batt_msg.header.stamp = Timestamp(odom_timestamp_);
   batt_msg.percentage = static_cast<float>(get_bat_soc());
   batt_msg.temperature = static_cast<float>(get_bat_temp());
   batt_msg.voltage = static_cast<float>(get_bat_mvol()) / 1000;
@@ -112,10 +111,6 @@ void Segwayrmp::PublishImuOdomState(void) {
   if (odom_update_ == 15) {
     odom_update_ = 0;
 
-    quat_.setRPY(0, 0, odom_euler_z_.euler_z / rad_to_deg_);
-    // odom_quat_ = tf2::toMsg(quat_);
-    tf2::convert(quat_, odom_quat_);
-
     ros_odom_.header.stamp = Timestamp(odom_timestamp_);
     ros_odom_.header.frame_id = "odom";
     ros_odom_.pose.pose.position.x = odom_pose_xy_.pos_x;
@@ -137,18 +132,55 @@ void Segwayrmp::PublishImuOdomState(void) {
     ros_odom_.twist.twist.angular.z =
         (double)imu_gyroscope_data_.gyr[2] / 900.0;
 
-    geometry_msgs::msg::TransformStamped tf_msg;
-    tf_msg.header.stamp = Timestamp(odom_timestamp_);
-    tf_msg.header.frame_id = "odom";
-    tf_msg.child_frame_id = "base_link";
-    tf_msg.transform.translation.x = odom_pose_xy_.pos_x;
-    tf_msg.transform.translation.y = odom_pose_xy_.pos_y;
-    tf_msg.transform.translation.z = 0.0;
-    tf_msg.transform.rotation = odom_quat_;
-    tf_broadcaster_->sendTransform(tf_msg);
-
     odom_pub_->publish(ros_odom_);
   }
+}
+
+void Segwayrmp::TfBroadcaster(void) {
+  quat_.setRPY(0, 0, odom_euler_z_.euler_z / rad_to_deg_);
+  tf2::convert(quat_, odom_quat_);
+  geometry_msgs::msg::TransformStamped odom_to_base_link_msg;
+  odom_to_base_link_msg.header.stamp = Timestamp(odom_timestamp_);
+  odom_to_base_link_msg.header.frame_id = "odom";
+  odom_to_base_link_msg.child_frame_id = "base_link";
+  odom_to_base_link_msg.transform.translation.x = odom_pose_xy_.pos_x;
+  odom_to_base_link_msg.transform.translation.y = odom_pose_xy_.pos_y;
+  odom_to_base_link_msg.transform.translation.z = 0.0;
+  odom_to_base_link_msg.transform.rotation = odom_quat_;
+  tf_broadcaster_->sendTransform(odom_to_base_link_msg);
+
+  geometry_msgs::msg::TransformStamped base_link_to_base_footprint_msg;
+  base_link_to_base_footprint_msg.header.stamp = Timestamp(odom_timestamp_);
+  base_link_to_base_footprint_msg.header.frame_id = "base_link";
+  base_link_to_base_footprint_msg.child_frame_id = "base_footprint";
+  base_link_to_base_footprint_msg.transform.translation.x = 0.67; // Full length
+  base_link_to_base_footprint_msg.transform.translation.y = 0.30; // Half width
+  base_link_to_base_footprint_msg.transform.translation.z =
+      -0.20; // Ground to back of robot (where imu is)
+  base_link_to_base_footprint_msg.transform.rotation.w = 1.0;
+  tf_broadcaster_->sendTransform(base_link_to_base_footprint_msg);
+
+  geometry_msgs::msg::TransformStamped base_link_to_imu_link_msg;
+  base_link_to_imu_link_msg.header.stamp =
+      Timestamp(imu_acceleration_timestamp_);
+  base_link_to_imu_link_msg.header.frame_id = "base_link";
+  base_link_to_imu_link_msg.child_frame_id = "imu_link";
+  base_link_to_imu_link_msg.transform.translation.x = 0.0;
+  base_link_to_imu_link_msg.transform.translation.y = 0.0;
+  base_link_to_imu_link_msg.transform.translation.z = 0.0;
+  base_link_to_imu_link_msg.transform.rotation.w = 1.0;
+  tf_broadcaster_->sendTransform(base_link_to_imu_link_msg);
+
+  geometry_msgs::msg::TransformStamped base_link_to_lidar_link_msg;
+  base_link_to_lidar_link_msg.header.stamp =
+      Timestamp(imu_acceleration_timestamp_);
+  base_link_to_lidar_link_msg.header.frame_id = "base_link";
+  base_link_to_lidar_link_msg.child_frame_id = "lidar_link";
+  base_link_to_lidar_link_msg.transform.translation.x = 0.33; // Half length
+  base_link_to_lidar_link_msg.transform.translation.y = 0.15; // Half width
+  base_link_to_lidar_link_msg.transform.translation.z = 0.08;
+  base_link_to_lidar_link_msg.transform.rotation.w = 1.0;
+  tf_broadcaster_->sendTransform(base_link_to_lidar_link_msg);
 }
 
 void Segwayrmp::OdomImuData(StampedBasicFrame *frame) {
