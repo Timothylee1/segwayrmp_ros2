@@ -3,14 +3,12 @@
 
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
-  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("segwayrmp_base_node");
-  westonrobot::Segwayrmp segwayrmp(node.get());
+  auto segwayrmp = std::make_shared<westonrobot::Segwayrmp>("segwayrmp_base_node");
 
-  if (segwayrmp.Initialize()) {
+  if (segwayrmp->Initialize()) {
     printf("Segwayrmp initialized, start running...\n");
-    segwayrmp.Run();
+    segwayrmp->Run();
   }
-
-
+  
   return 0;
 }
