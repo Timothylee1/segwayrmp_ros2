@@ -17,19 +17,19 @@ odom_euler_xy_t odom_euler_xy_;
 odom_vel_line_xy_t odom_velocity_xy_;
 namespace westonrobot {
 
-Segwayrmp::Segwayrmp(rclcpp::Node *node) : node_(node) {
+Segwayrmp::Segwayrmp(std::string node_name) : Node(node_name) {
   timestamp_data_.on_new_data = OdomImuData;
   aprctrl_datastamped_jni_register(&timestamp_data_);
-  tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(node_);
+  tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
-  cmd_vel_sub_ = node_->create_subscription<geometry_msgs::msg::Twist>(
+  cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
       "/cmd_vel", 10,
       std::bind(&Segwayrmp::CommandVelocityCallback, this,
                 std::placeholders::_1));
-  batt_pub_ = node_->create_publisher<sensor_msgs::msg::BatteryState>(
+  batt_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>(
       "/battery_state", 10);
-  imu_pub_ = node_->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
-  odom_pub_ = node_->create_publisher<nav_msgs::msg::Odometry>("/odom", 10);
+  imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
+  odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom", 10);
 }
 
 bool Segwayrmp::Initialize(void) {
@@ -48,7 +48,7 @@ void Segwayrmp::Run(void) {
     PublishBatteryState();
     PublishImuOdomState();
     TfBroadcaster();
-    // rclcpp::spin_some();
+    rclcpp::spin_some(Node::shared_from_this());
     rate.sleep();
   }
   rclcpp::shutdown();
@@ -175,7 +175,7 @@ void Segwayrmp::TfBroadcaster(void) {
       Timestamp(imu_acceleration_timestamp_);
   base_link_to_lidar_link_msg.header.frame_id = "base_link";
   base_link_to_lidar_link_msg.child_frame_id = "laser";
-  base_link_to_lidar_link_msg.transform.translation.x = 0.34;
+  base_link_to_lidar_link_msg.transform.translation.x = 0.64;
   base_link_to_lidar_link_msg.transform.translation.y = 0.0;
   base_link_to_lidar_link_msg.transform.translation.z = 0.08;
   base_link_to_lidar_link_msg.transform.rotation.w = 1.0;
@@ -282,7 +282,7 @@ void Segwayrmp::CommandVelocityCallback(
     const geometry_msgs::msg::Twist::SharedPtr msg) {
   double angular_vel = msg->angular.z;
   double linear_vel = msg->linear.x;
-  RCLCPP_DEBUG(node_->get_logger(),
+  RCLCPP_DEBUG(this->get_logger(),
                "Received Twist message: linear.x= %f, angular.z= %f",
                linear_vel, angular_vel);
 

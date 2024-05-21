@@ -28,7 +28,6 @@ find_package(action_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
-find_package(segwayrmp_msg REQUIRED)
 
 include_directories(
   include
@@ -53,7 +52,6 @@ ament_target_dependencies(segwayrmp_base_node
   "geometry_msgs"
   "tf2_geometry_msgs"
   "builtin_interfaces"
-  segwayrmp_msg
 )
 
 # Link libraries

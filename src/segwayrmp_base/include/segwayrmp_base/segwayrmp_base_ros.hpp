@@ -16,9 +16,9 @@
 
 namespace westonrobot {
 
-class Segwayrmp {
+class Segwayrmp : public rclcpp::Node {
 public:
-  Segwayrmp(rclcpp::Node *node);
+  Segwayrmp(std::string node_name);
 
   bool Initialize(void);
   void Run(void);
@@ -33,7 +33,6 @@ private:
 
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
-  rclcpp::Node *node_;
   tf2::Quaternion quat_;
   sensor_msgs::msg::Imu ros_imu_;
   nav_msgs::msg::Odometry ros_odom_;
