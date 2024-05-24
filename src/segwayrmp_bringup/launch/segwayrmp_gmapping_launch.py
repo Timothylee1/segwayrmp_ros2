@@ -41,7 +41,7 @@ def generate_launch_description():
                 os.path.expanduser("~"),
                 "segwayrmp_ros2",
                 "src",
-                "segwayrmp_description",
+                "segwayrmp_bringup",
                 "rviz",
                 "default_view.rviz",
             ),
