@@ -43,7 +43,7 @@ bool Segwayrmp::Initialize(void) {
 }
 
 void Segwayrmp::Run(void) {
-  rclcpp::Rate rate(3);
+  rclcpp::Rate rate(50);
   while (rclcpp::ok()) {
     PublishBatteryState();
     PublishImuOdomState();

@@ -1,0 +1,13 @@
+[Unit]
+Description=Bringup segwayrmp_ros2
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=/home/wr/Workspace/segwayrmp_ros2/docker
+
+ExecStart=/usr/bin/docker compose up --detach
+ExecStop=/usr/bin/docker compose down
+
+[Install]
+WantedBy=multi-user.target
