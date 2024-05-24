@@ -1,0 +1,21 @@
+version: "3"
+services:
+  segwayrmp_base:
+    container_name: segwayrmp_base_node
+    privileged: true
+    image: ros2/segwayrmp:v0.1
+    network_mode: "host"
+    entrypoint: [ "/bin/bash" ]
+    working_dir: /home/segwayrmp_ros2
+    command: ["-c", "source install/setup.bash && ros2 run segwayrmp_base segwayrmp_base_node"]
+    restart: unless-stopped
+
+  urg_node2:
+    container_name: urg_node2_lidar
+    privileged: true
+    image: ros2/segwayrmp:v0.1
+    network_mode: "host"
+    entrypoint: [ "/bin/bash" ]
+    working_dir: /home/segwayrmp_ros2
+    command: ["-c", "source install/setup.bash && ros2 launch urg_node2 urg_node2.launch.py"]
+    restart: unless-stopped
