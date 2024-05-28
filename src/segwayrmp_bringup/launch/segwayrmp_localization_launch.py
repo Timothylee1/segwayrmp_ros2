@@ -79,7 +79,7 @@ def generate_launch_description():
     declare_map_yaml_cmd = DeclareLaunchArgument(
         "map",
         default_value=os.path.join(
-            segwayrmp_bringup_dir, "maps", "display_room_map.yaml"
+            segwayrmp_bringup_dir, "maps", "office.yaml"
         ),
         description="Full path to map yaml file to load",
     )
