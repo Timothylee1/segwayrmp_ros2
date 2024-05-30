@@ -56,7 +56,8 @@ ament_target_dependencies(segwayrmp_base_node
 
 # Link libraries
 target_link_libraries(segwayrmp_base_node
-  # Use 'libctrl_x86_64.so' or 'libctrl_arm64-v8a.so' 
+
+  # Use 'libctrl_x86_64.so' or 'libctrl_arm64-v8a.so'
   # depending on your system architecture
   ${PROJECT_SOURCE_DIR}/lib/libctrl_arm64-v8a.so
 )
@@ -65,9 +66,6 @@ target_link_libraries(segwayrmp_base_node
 install(TARGETS segwayrmp_base_node
   DESTINATION lib/${PROJECT_NAME}
 )
-
-install(DIRECTORY launch lib
-  DESTINATION share/${PROJECT_NAME}/)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
