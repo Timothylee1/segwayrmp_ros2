@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /TF1/Frames1
         - /TF1/Tree1
+        - /Odometry1/Shape1
       Splitter Ratio: 0.5833333134651184
     Tree Height: 494
   - Class: rviz_common/Selection
@@ -386,7 +387,6 @@ Visualization Manager:
           Enabled: true
           Name: Trajectories
           Namespaces:
-            InvalidTrajectories: true
             ValidTrajectories: true
           Topic:
             Depth: 5
@@ -508,6 +508,45 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /waypoints
       Value: true
+    - Angle Tolerance: 0.10000000149011612
+      Class: rviz_default_plugins/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: true
+      Enabled: true
+      Keep: 1
+      Name: Odometry
+      Position Tolerance: 0.10000000149011612
+      Shape:
+        Alpha: 1
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 163; 72
+        Head Length: 0.30000001192092896
+        Head Radius: 0.10000000149011612
+        Shaft Length: 1
+        Shaft Radius: 0.05000000074505806
+        Value: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /odom
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -555,7 +594,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 84.22638702392578
+      Scale: 81.59680938720703
       Target Frame: base_footprint
       Value: TopDownOrtho (rviz_default_plugins)
       X: 2.8790342807769775
