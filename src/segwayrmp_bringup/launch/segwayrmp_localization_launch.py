@@ -13,14 +13,15 @@ from nav2_common.launch import RewrittenYaml
 
 
 def generate_launch_description():
-    # Get the launch directory    
+    # Get the launch directory
     segwayrmp_bringup_dir = get_package_share_directory("segwayrmp_bringup")
 
     namespace = LaunchConfiguration("namespace")
     map_yaml_file = LaunchConfiguration("map")
     use_sim_time = LaunchConfiguration("use_sim_time")
     autostart = LaunchConfiguration("autostart")
-    params_file = LaunchConfiguration("params_file")
+    nav2_params_file = LaunchConfiguration("nav2_params_file")
+    ekf_params_file = LaunchConfiguration("ekf_params_file")
     use_composition = LaunchConfiguration("use_composition")
     container_name = LaunchConfiguration("container_name")
     container_name_full = (namespace, "/", container_name)
@@ -40,9 +41,19 @@ def generate_launch_description():
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {"use_sim_time": use_sim_time, "yaml_filename": map_yaml_file}
 
-    configured_params = ParameterFile(
+    nav2_configured_params = ParameterFile(
         RewrittenYaml(
-            source_file=params_file,
+            source_file=nav2_params_file,
+            root_key=namespace,
+            param_rewrites=param_substitutions,
+            convert_types=True,
+        ),
+        allow_substs=True,
+    )
+    
+    ekf_configured_params = ParameterFile(
+        RewrittenYaml(
+            source_file=ekf_params_file,
             root_key=namespace,
             param_rewrites=param_substitutions,
             convert_types=True,
@@ -69,10 +80,16 @@ def generate_launch_description():
         description="Use simulation (Gazebo) clock if true",
     )
 
-    declare_params_file_cmd = DeclareLaunchArgument(
-        "params_file",
+    declare_nav2_params_file_cmd = DeclareLaunchArgument(
+        "nav2_params_file",
         default_value=os.path.join(segwayrmp_bringup_dir, "params", "nav2_params.yaml"),
-        description="Full path to the ROS2 parameters file to use for all launched nodes",
+        description="Full path to the Nav2 parameters file to use for all launched nodes",
+    )
+
+    declare_ekf_params_file_cmd = DeclareLaunchArgument(
+        "ekf_params_file",
+        default_value=os.path.join(segwayrmp_bringup_dir, "params", "ekf.yaml"),
+        description="Full path to the ROS2 localization parameters file",
     )
 
     declare_autostart_cmd = DeclareLaunchArgument(
@@ -113,9 +130,21 @@ def generate_launch_description():
                 output="screen",
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[configured_params],
+                parameters=[nav2_configured_params],
                 arguments=["--ros-args", "--log-level", log_level],
                 remappings=remappings,
+            ),
+            Node(
+                package="robot_localization",
+                executable="ekf_node",
+                name="ekf_filter_node",
+                output="screen",
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                parameters=[
+                    ekf_configured_params,
+                    {"use_sim_time": use_sim_time},
+                ],
             ),
             Node(
                 package="nav2_amcl",
@@ -124,7 +153,7 @@ def generate_launch_description():
                 output="screen",
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[configured_params],
+                parameters=[nav2_configured_params],
                 arguments=["--ros-args", "--log-level", log_level],
                 remappings=remappings,
             ),
@@ -151,14 +180,22 @@ def generate_launch_description():
                 package="nav2_map_server",
                 plugin="nav2_map_server::MapServer",
                 name="map_server",
-                parameters=[configured_params],
+                parameters=[nav2_configured_params],
                 remappings=remappings,
+            ),
+            ComposableNode(
+                package="robot_localization",
+                plugin="robot_localization::EkfNode",
+                name="ekf_filter_node",
+                parameters=[
+                    {"use_sim_time": use_sim_time},
+                ],
             ),
             ComposableNode(
                 package="nav2_amcl",
                 plugin="nav2_amcl::AmclNode",
                 name="amcl",
-                parameters=[configured_params],
+                parameters=[nav2_configured_params],
                 remappings=remappings,
             ),
             ComposableNode(
@@ -186,7 +223,8 @@ def generate_launch_description():
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_params_file_cmd)
+    ld.add_action(declare_nav2_params_file_cmd)
+    ld.add_action(declare_ekf_params_file_cmd)
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_use_composition_cmd)
     ld.add_action(declare_container_name_cmd)

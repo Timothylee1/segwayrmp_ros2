@@ -19,6 +19,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(slam_toolbox REQUIRED)
 find_package(rviz2 REQUIRED)
+find_package(robot_localization REQUIRED)
 
 install(DIRECTORY launch params maps rviz
   DESTINATION share/${PROJECT_NAME}/
