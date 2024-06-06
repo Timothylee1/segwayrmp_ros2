@@ -1,10 +1,10 @@
 amcl:
   ros__parameters:
     use_sim_time: True
-    alpha1: 0.1 # odom expected noise in rotation from rotation
-    alpha2: 0.2 # odom expected noise in rotation from translation
-    alpha3: 0.1 # odom expected noise in translation from translation
-    alpha4: 0.1 # odom expected noise in translation from rotation
+    alpha1: 0.8 # odom expected noise in rotation from rotation
+    alpha2: 0.1 # odom expected noise in rotation from translation
+    alpha3: 0.2 # odom expected noise in translation from translation
+    alpha4: 0.2 # odom expected noise in translation from rotation
     base_frame_id: "base_link"
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
@@ -12,29 +12,29 @@ amcl:
     do_beamskip: false
     global_frame_id: "map"
     lambda_short: 0.1
-    laser_likelihood_max_dist: 5.0 #2.0
+    laser_likelihood_max_dist: 10.0 #2.0
     laser_max_range: 20.0 #30.0
     laser_min_range: -1.0
     laser_model_type: "likelihood_field"
     max_beams: 60
-    max_particles: 2000
-    min_particles: 500
+    max_particles: 3000 #2000
+    min_particles: 1000 #500
     odom_frame_id: "odom"
-    pf_err: 0.05
+    pf_err: 0.1 #0.05
     pf_z: 0.99
     recovery_alpha_fast: 0.0
     recovery_alpha_slow: 0.0
     resample_interval: 1
-    robot_model_type: "nav2_amcl::OmniMotionModel" #nav2_amcl::DifferentialMotionModel
+    robot_model_type: "nav2_amcl::DifferentialMotionModel" #nav2_amcl::OmniMotionModel
     save_pose_rate: 0.5
     sigma_hit: 0.05 #0.2
     tf_broadcast: true
-    transform_tolerance: 0.2
-    update_min_a: 0.1 #0.2
-    update_min_d: 0.2 #0.25
-    z_hit: 0.8
+    transform_tolerance: 0.5 #0.2
+    update_min_a: 0.2
+    update_min_d: 0.25
+    z_hit: 0.80
     z_max: 0.05
-    z_rand: 0.2 # X% chance a measurement is not based on the map provided
+    z_rand: 0.20 # X% chance a measurement is not based on the map provided
     z_short: 0.05
     scan_topic: scan
 
@@ -44,7 +44,7 @@ bt_navigator:
     global_frame: map
     robot_base_frame: base_footprint
     odom_topic: /odom
-    bt_loop_duration: 10
+    bt_loop_duration: 5 #10
     default_server_timeout: 20
     # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
     # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
@@ -110,9 +110,15 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 controller_server:
   ros__parameters:
     controller_frequency: 20.0
+    goal_checker_plugins: ["goal_checker"]
+    goal_checker:
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.25
+      stateful: True
     FollowPath:
       plugin: "nav2_rotation_shim_controller::RotationShimController"
-      angular_dist_threshold: 0.4
+      angular_dist_threshold: 0.3
       forward_sampling_distance: 0.5
       rotate_to_heading_angular_vel: 2.2 #1.8
       max_angular_accel: 3.2
@@ -123,6 +129,7 @@ controller_server:
       model_dt: 0.05
       batch_size: 2000
       vx_std: 0.2
+      vy_std: 0.2
       wz_std: 0.4
       vx_max: 1.0
       vx_min: -0.5
@@ -130,8 +137,8 @@ controller_server:
       iteration_count: 1
       # prune_distance: 1.5
       retry_attempt_limit: 3
-      transform_tolerance: 0.2
-      temperature: 0.3
+      transform_tolerance: 0.5 #0.2
+      temperature: 0.15 #0.3
       gamma: 0.015
       motion_model: "Ackermann"
       visualize: false
@@ -141,7 +148,7 @@ controller_server:
         trajectory_step: 5
         time_step: 3
       AckermannConstraints:
-        min_turning_r: 1.45
+        min_turning_r: 1.4
       critics:
         [
           "ConstraintCritic",
@@ -151,6 +158,7 @@ controller_server:
           "PathFollowCritic",
           "PathAngleCritic",
           "PreferForwardCritic",
+          "CostCritic",
         ]
       ConstraintCritic:
         enabled: true
@@ -224,16 +232,16 @@ local_costmap:
       robot_base_frame: base_footprint
       use_sim_time: True
       rolling_window: true
-      width: 3
-      height: 3
-      resolution: 0.03 #0.05
-      footprint: "[ [0.67, 0.30], [0.67, -0.30], [0.0, -0.30], [0.0, 0.30] ]"
+      width: 6
+      height: 6
+      resolution: 0.05
+      footprint: "[ [0.38, 0.33], [0.38, -0.33], [-0.38, -0.33], [-0.38, 0.33] ]"
       footprint_padding: 0.1
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 2.6 #3.0
-        inflation_radius: 1.75 #0.55
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.8
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -243,20 +251,27 @@ local_costmap:
         z_voxels: 16
         max_obstacle_height: 2.0
         mark_threshold: 0
-        observation_sources: scan
-        scan:
+        observation_sources: scan_marking scan_clearing
+        scan_marking:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: False
+          marking: True
+          data_type: "LaserScan"
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
+        scan_clearing:
           topic: /scan
           max_obstacle_height: 2.0
           clearing: True
-          marking: True
+          marking: False
           data_type: "LaserScan"
-          raytrace_max_range: 3.5 #3.0 # Maximum range to clear obstacles from costmap.
+          raytrace_max_range: 3.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 3.0 #2.5 # Maximum range to mark obstacles in costmap.
+          obstacle_max_range: 2.5
           obstacle_min_range: 0.0
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_subscribe_transient_local: True
       always_send_full_costmap: True
 
 global_costmap:
@@ -264,36 +279,46 @@ global_costmap:
     ros__parameters:
       update_frequency: 1.0
       publish_frequency: 1.0
-      transform_tolerance: 0.2
+      transform_tolerance: 0.5 #0.2
       global_frame: map
       robot_base_frame: base_footprint
       use_sim_time: True
-      footprint: "[ [0.67, 0.30], [0.67, -0.30], [0.0, -0.30], [0.0, 0.30] ]"
+      footprint: "[ [0.38, 0.33], [0.38, -0.33], [0.38, -0.33], [0.38, 0.33] ]"
       footprint_padding: 0.1
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.3
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan
-        scan:
+        observation_sources: scan_marking scan_clearing
+        scan_marking:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: False
+          marking: True
+          data_type: "LaserScan"
+          raytrace_max_range: 8.0 #3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 8.0 #2.5
+          obstacle_min_range: 0.0
+        scan_clearing:
           topic: /scan
           max_obstacle_height: 2.0
           clearing: True
-          marking: True
+          marking: False
           data_type: "LaserScan"
-          raytrace_max_range: 3.0
+          raytrace_max_range: 8.0 #3.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 2.5
+          obstacle_max_range: 8.0 #2.5
           obstacle_min_range: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 2.0 #1.0
-        inflation_radius: 0.60 #0.35
       always_send_full_costmap: True
 
 map_server:
@@ -318,16 +343,23 @@ planner_server:
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_smac_planner/SmacPlannerHybrid" #nav2_navfn_planner/NavfnPlanner
-      tolerance: 0.5
+      tolerance: 0.3
       minimum_turning_radius: 1.4
       allow_unknown: true
-      change_penalty: 0.15 # For Hybrid nodes: penalty to apply if motion is changing directions, must be >= 0
+      change_penalty: 0.2 #0.15 # For Hybrid nodes: penalty to apply if motion is changing directions, must be >= 0
       non_straight_penalty: 1.3 # For Hybrid nodes: penalty to apply if motion is non-straight, must be => 1
-      cost_penalty: 2.0 # For Hybrid nodes: penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
+      cost_penalty: 2.5 #2.0 # For Hybrid nodes: penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
+      smoother:
+        max_iterations: 1000
+        w_smooth: 0.3
+        w_data: 0.2
+        tolerance: 1.0e-10
+        do_refinement: true
 
 smoother_server:
   ros__parameters:
     use_sim_time: True
+    robot_base_frame: base_footprint
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
@@ -354,11 +386,11 @@ behavior_server:
       plugin: "nav2_behaviors/AssistedTeleop"
     global_frame: odom
     robot_base_frame: base_footprint
-    transform_tolerance: 0.2
+    transform_tolerance: 0.5 #0.2
     use_sim_time: true
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
-    min_rotational_vel: 0.4
+    min_rotational_vel: 0.5
     rotational_acc_lim: 3.2
 
 robot_state_publisher:
@@ -384,42 +416,41 @@ velocity_smoother:
     feedback: "OPEN_LOOP"
     # max_velocity: [0.26, 0.0, 1.0]
     # min_velocity: [-0.26, 0.0, -1.0]
-    max_velocity: [0.50, 0.0, 1.0]
-    min_velocity: [-0.50, 0.0, -1.0]
+    max_velocity: [0.30, 0.0, 1.0]
+    min_velocity: [-0.30, 0.0, -1.0]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
-
 # collision_monitor:
-  # ros__parameters:
-  #   base_frame_id: "base_footprint"
-  #   odom_frame_id: "odom"
-  #   cmd_vel_in_topic: "cmd_vel_smoothed"
-  #   cmd_vel_out_topic: "cmd_vel"
-  #   state_topic: "collision_monitor_state"
-  #   transform_tolerance: 0.5
-  #   source_timeout: 1.0
-  #   base_shift_correction: True
-  #   stop_pub_timeout: 2.0
-  #   # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
-  #   # and robot footprint for "approach" action type.
-  #   polygons: ["FootprintApproach"]
-  #   FootprintApproach:
-  #     type: "polygon"
-  #     action_type: "approach"
-  #     footprint_topic: "/local_costmap/published_footprint"
-  #     time_before_collision: 1.2
-  #     simulation_time_step: 0.1
-  #     min_points: 6
-  #     visualize: False
-  #     enabled: True
-  #   observation_sources: ["scan"]
-  #   scan:
-  #     type: "scan"
-  #     topic: "/scan"
-  #     min_height: 0.15
-  #     max_height: 2.0
-  #     enabled: True
+# ros__parameters:
+#   base_frame_id: "base_footprint"
+#   odom_frame_id: "odom"
+#   cmd_vel_in_topic: "cmd_vel_smoothed"
+#   cmd_vel_out_topic: "cmd_vel"
+#   state_topic: "collision_monitor_state"
+#   transform_tolerance: 0.5
+#   source_timeout: 1.0
+#   base_shift_correction: True
+#   stop_pub_timeout: 2.0
+#   # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
+#   # and robot footprint for "approach" action type.
+#   polygons: ["FootprintApproach"]
+#   FootprintApproach:
+#     type: "polygon"
+#     action_type: "approach"
+#     footprint_topic: "/local_costmap/published_footprint"
+#     time_before_collision: 1.2
+#     simulation_time_step: 0.1
+#     min_points: 6
+#     visualize: False
+#     enabled: True
+#   observation_sources: ["scan"]
+#   scan:
+#     type: "scan"
+#     topic: "/scan"
+#     min_height: 0.15
+#     max_height: 2.0
+#     enabled: True

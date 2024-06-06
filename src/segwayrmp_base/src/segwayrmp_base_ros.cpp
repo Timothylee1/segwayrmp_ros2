@@ -29,7 +29,7 @@ Segwayrmp::Segwayrmp(std::string node_name) : Node(node_name) {
   batt_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>(
       "/battery_state", 10);
   imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
-  odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom", 10);
+  odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom", 50);
 }
 
 bool Segwayrmp::Initialize(void) {
@@ -96,9 +96,9 @@ void Segwayrmp::PublishImuState(void) {
   // Populate linear velocity covariance
   for (size_t i = 0; i < 9; ++i) {
     // Set diagonal elements to non-zero values, and others to zero
-    ros_imu_.linear_acceleration_covariance[i] = (i % 4 == 0) ? 0.15 : 0.0;
+    ros_imu_.linear_acceleration_covariance[i] = (i % 4 == 0) ? 0.2 : 0.0;
   }
-
+  
   imu_pub_->publish(ros_imu_);
 }
 
@@ -132,6 +132,13 @@ void Segwayrmp::PublishImuOdomState(void) {
     ros_odom_.twist.twist.angular.z =
         (double)imu_gyroscope_data_.gyr[2] / 900.0;
 
+    ros_odom_.pose.covariance[0] = 0.1;
+    ros_odom_.pose.covariance[7] = 0.1;
+    ros_odom_.pose.covariance[14] = 0.1;
+    ros_odom_.pose.covariance[21] = 1.0;
+    ros_odom_.pose.covariance[28] = 1.0;
+    ros_odom_.pose.covariance[35] = 1.0;
+  
     odom_pub_->publish(ros_odom_);
   }
 }
@@ -164,7 +171,7 @@ void Segwayrmp::TfBroadcaster(void) {
   base_link_to_base_footprint_msg.header.stamp = Timestamp(odom_timestamp_);
   base_link_to_base_footprint_msg.header.frame_id = "base_link";
   base_link_to_base_footprint_msg.child_frame_id = "base_footprint";
-  base_link_to_base_footprint_msg.transform.translation.x = 0.0;
+  base_link_to_base_footprint_msg.transform.translation.x = 0.33;
   base_link_to_base_footprint_msg.transform.translation.y = 0.0;
   base_link_to_base_footprint_msg.transform.translation.z = -0.20;
   base_link_to_base_footprint_msg.transform.rotation.w = 1.0;
