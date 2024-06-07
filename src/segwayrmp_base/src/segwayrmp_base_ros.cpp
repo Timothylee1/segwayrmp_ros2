@@ -96,7 +96,7 @@ void Segwayrmp::PublishImuState(void) {
   // Populate linear velocity covariance
   for (size_t i = 0; i < 9; ++i) {
     // Set diagonal elements to non-zero values, and others to zero
-    ros_imu_.linear_acceleration_covariance[i] = (i % 4 == 0) ? 0.2 : 0.0;
+    ros_imu_.linear_acceleration_covariance[i] = (i % 4 == 0) ? 0.15 : 0.0;
   }
   
   imu_pub_->publish(ros_imu_);
@@ -132,12 +132,12 @@ void Segwayrmp::PublishImuOdomState(void) {
     ros_odom_.twist.twist.angular.z =
         (double)imu_gyroscope_data_.gyr[2] / 900.0;
 
-    ros_odom_.pose.covariance[0] = 0.1;
-    ros_odom_.pose.covariance[7] = 0.1;
-    ros_odom_.pose.covariance[14] = 0.1;
-    ros_odom_.pose.covariance[21] = 1.0;
-    ros_odom_.pose.covariance[28] = 1.0;
-    ros_odom_.pose.covariance[35] = 1.0;
+    // ros_odom_.pose.covariance[0] = 0.1;
+    // ros_odom_.pose.covariance[7] = 0.1;
+    // ros_odom_.pose.covariance[14] = 0.1;
+    // ros_odom_.pose.covariance[21] = 1.0;
+    // ros_odom_.pose.covariance[28] = 1.0;
+    // ros_odom_.pose.covariance[35] = 1.0;
   
     odom_pub_->publish(ros_odom_);
   }
