@@ -7,7 +7,7 @@ services:
     network_mode: "host"
     entrypoint: [ "/bin/bash" ]
     working_dir: /home/segwayrmp_ros2
-    command: ["-c", "source install/setup.bash && ros2 run segwayrmp_base segwayrmp_base_node"]
+    command: ["-c", "export ROS_DOMAIN_ID=52 && source install/setup.bash && ros2 run segwayrmp_base segwayrmp_base_node"]
     restart: unless-stopped
 
   urg_node2:
@@ -17,5 +17,15 @@ services:
     network_mode: "host"
     entrypoint: [ "/bin/bash" ]
     working_dir: /home/segwayrmp_ros2
-    command: ["-c", "source install/setup.bash && ros2 launch urg_node2 urg_node2.launch.py"]
+    command: ["-c", "export ROS_DOMAIN_ID=52 && source install/setup.bash && ros2 launch urg_node2 urg_node2.launch.py"]
+    restart: unless-stopped
+
+  localization_node:
+    container_name: localization_node
+    privileged: true
+    image: ros2/segwayrmp:v0.1
+    network_mode: "host"
+    entrypoint: [ "/bin/bash" ]
+    working_dir: /home/segwayrmp_ros2
+    command: ["-c", "export ROS_DOMAIN_ID=52 && source install/setup.bash && ros2 launch segwayrmp_bringup segwayrmp_localization_launch.py use_sim_time:=False map:=src/segwayrmp_bringup/maps/display.yaml"]
     restart: unless-stopped
