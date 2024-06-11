@@ -1,10 +1,10 @@
 amcl:
   ros__parameters:
     use_sim_time: True
-    alpha1: 0.4 # odom expected noise in rotation from rotation
-    alpha2: 0.2 # odom expected noise in rotation from translation
+    alpha1: 0.8 # odom expected noise in rotation from rotation
+    alpha2: 0.6 # odom expected noise in rotation from translation
     alpha3: 0.2 # odom expected noise in translation from translation
-    alpha4: 0.4 # odom expected noise in translation from rotation
+    alpha4: 0.8 # odom expected noise in translation from rotation
     base_frame_id: "base_link"
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
@@ -25,16 +25,16 @@ amcl:
     recovery_alpha_fast: 0.0
     recovery_alpha_slow: 0.0
     resample_interval: 1
-    robot_model_type: "nav2_amcl::DifferentialMotionModel" #nav2_amcl::OmniMotionModel
+    robot_model_type: "nav2_amcl::OmniMotionModel" #nav2_amcl::DifferentialMotionModel
     save_pose_rate: 0.5
-    sigma_hit: 0.05 #0.2
+    sigma_hit: 0.2
     tf_broadcast: true
     transform_tolerance: 0.5 #0.2
     update_min_a: 0.2
     update_min_d: 0.25
-    z_hit: 0.65
+    z_hit: 0.95
     z_max: 0.05
-    z_rand: 0.35 # X% chance a measurement is not based on the map provided
+    z_rand: 0.05 # X% chance a measurement is not based on the map provided
     z_short: 0.05
     scan_topic: scan
 
@@ -111,14 +111,55 @@ controller_server:
   ros__parameters:
     controller_frequency: 20.0
     goal_checker_plugins: ["goal_checker"]
+    controller_plugins: ["FollowPath"]
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.5 #0.25
       yaw_goal_tolerance: 0.25
       stateful: True
     FollowPath:
+      # plugin: "dwb_core::DWBLocalPlanner"
+      # debug_trajectory_details: True
+      # min_vel_x: 0.0
+      # min_vel_y: 0.0
+      # max_vel_x: 0.30
+      # max_vel_y: 0.0
+      # max_vel_theta: 1.0
+      # min_speed_xy: 0.0
+      # max_speed_xy: 0.30
+      # min_speed_theta: 0.0
+      # acc_lim_x: 2.5
+      # acc_lim_y: 0.0
+      # acc_lim_theta: 3.2
+      # decel_lim_x: -2.5
+      # decel_lim_y: 0.0
+      # decel_lim_theta: -3.2
+      # vx_samples: 20
+      # vy_samples: 5
+      # vtheta_samples: 20
+      # sim_time: 1.7
+      # linear_granularity: 0.05
+      # angular_granularity: 0.025
+      # transform_tolerance: 0.2
+      # xy_goal_tolerance: 0.5
+      # trans_stopped_velocity: 0.25
+      # short_circuit_trajectory_evaluation: True
+      # stateful: True
+      # critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      # BaseObstacle.scale: 0.02
+      # PathAlign.scale: 32.0
+      # GoalAlign.scale: 24.0
+      # PathAlign.forward_point_distance: 0.1
+      # GoalAlign.forward_point_distance: 0.1
+      # PathDist.scale: 32.0
+      # GoalDist.scale: 24.0
+      # RotateToGoal.scale: 32.0
+      # RotateToGoal.slowing_factor: 5.0
+      # RotateToGoal.lookahead_time: -1.0
+
       plugin: "nav2_rotation_shim_controller::RotationShimController"
-      angular_dist_threshold: 0.3
+      angular_dist_threshold: 0.25
+      rotate_to_goal_heading: True
       forward_sampling_distance: 0.5
       rotate_to_heading_angular_vel: 2.2 #1.8
       max_angular_accel: 3.2
@@ -138,9 +179,9 @@ controller_server:
       # prune_distance: 1.5
       retry_attempt_limit: 3
       transform_tolerance: 0.5 #0.2
-      temperature: 0.15 #0.3
+      temperature: 0.3
       gamma: 0.015
-      motion_model: "Ackermann"
+      motion_model: "Ackermann" #Ackermann
       visualize: false
       reset_period: 1.0 # (only in Humble)
       regenerate_noises: false
@@ -173,7 +214,7 @@ controller_server:
         enabled: true
         cost_power: 1
         cost_weight: 3.0
-        threshold_to_consider: 0.5
+        threshold_to_consider: 1.0 #0.5
       PreferForwardCritic:
         enabled: true
         cost_power: 1
@@ -220,14 +261,14 @@ controller_server:
         cost_weight: 2.0
         offset_from_furthest: 4
         threshold_to_consider: 0.5
-        max_angle_to_furthest: 1.0
-        mode: 0
+        max_angle_to_furthest: 0.7
+        mode: 2 #0
 
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 5.0
-      publish_frequency: 2.0
+      update_frequency: 10.0 #5.0
+      publish_frequency: 5.0 #2.0
       global_frame: odom
       robot_base_frame: base_footprint
       use_sim_time: True
@@ -241,7 +282,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 2.0
-        inflation_radius: 0.8
+        inflation_radius: 0.4
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -338,7 +379,7 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 20.0
+    expected_planner_frequency: 10.0
     use_sim_time: True
     planner_plugins: ["GridBased"]
     GridBased:
@@ -347,7 +388,7 @@ planner_server:
       minimum_turning_radius: 1.4
       allow_unknown: true
       change_penalty: 0.2 #0.15 # For Hybrid nodes: penalty to apply if motion is changing directions, must be >= 0
-      non_straight_penalty: 1.3 # For Hybrid nodes: penalty to apply if motion is non-straight, must be => 1
+      non_straight_penalty: 1.0 # For Hybrid nodes: penalty to apply if motion is non-straight, must be => 1
       cost_penalty: 2.5 #2.0 # For Hybrid nodes: penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
       smoother:
         max_iterations: 1000
