@@ -1,10 +1,10 @@
 amcl:
   ros__parameters:
     use_sim_time: True
-    alpha1: 0.8 # odom expected noise in rotation from rotation
-    alpha2: 0.6 # odom expected noise in rotation from translation
+    alpha1: 0.4 # odom expected noise in rotation from rotation
+    alpha2: 0.3 # odom expected noise in rotation from translation
     alpha3: 0.2 # odom expected noise in translation from translation
-    alpha4: 0.8 # odom expected noise in translation from rotation
+    alpha4: 0.4 # odom expected noise in translation from rotation
     base_frame_id: "base_link"
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
@@ -13,28 +13,28 @@ amcl:
     global_frame_id: "map"
     lambda_short: 0.1
     laser_likelihood_max_dist: 10.0 #2.0
-    laser_max_range: 20.0 #30.0
+    laser_max_range: 30.0
     laser_min_range: -1.0
     laser_model_type: "likelihood_field"
     max_beams: 60
     max_particles: 3000 #2000
     min_particles: 1000 #500
     odom_frame_id: "odom"
-    pf_err: 0.1 #0.05
+    pf_err: 0.05
     pf_z: 0.99
     recovery_alpha_fast: 0.0
     recovery_alpha_slow: 0.0
     resample_interval: 1
-    robot_model_type: "nav2_amcl::OmniMotionModel" #nav2_amcl::DifferentialMotionModel
+    robot_model_type: "nav2_amcl::DifferentialMotionModel" #nav2_amcl::OmniMotionModel
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
     transform_tolerance: 0.5 #0.2
-    update_min_a: 0.2
-    update_min_d: 0.25
-    z_hit: 0.95
+    update_min_a: 0.05
+    update_min_d: 0.05
+    z_hit: 0.98
     z_max: 0.05
-    z_rand: 0.05 # X% chance a measurement is not based on the map provided
+    z_rand: 0.02 # X% chance a measurement is not based on the map provided
     z_short: 0.05
     scan_topic: scan
 
@@ -44,7 +44,7 @@ bt_navigator:
     global_frame: map
     robot_base_frame: base_footprint
     odom_topic: /odom
-    bt_loop_duration: 5 #10
+    bt_loop_duration: 5
     default_server_timeout: 20
     # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
     # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
@@ -109,166 +109,151 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 
 controller_server:
   ros__parameters:
-    controller_frequency: 20.0
+    controller_frequency: 30.0
     goal_checker_plugins: ["goal_checker"]
-    controller_plugins: ["FollowPath"]
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.5 #0.25
       yaw_goal_tolerance: 0.25
       stateful: True
+    controller_plugins: ["FollowPath"]
     FollowPath:
-      # plugin: "dwb_core::DWBLocalPlanner"
-      # debug_trajectory_details: True
-      # min_vel_x: 0.0
-      # min_vel_y: 0.0
-      # max_vel_x: 0.30
-      # max_vel_y: 0.0
-      # max_vel_theta: 1.0
-      # min_speed_xy: 0.0
-      # max_speed_xy: 0.30
-      # min_speed_theta: 0.0
-      # acc_lim_x: 2.5
-      # acc_lim_y: 0.0
-      # acc_lim_theta: 3.2
-      # decel_lim_x: -2.5
-      # decel_lim_y: 0.0
-      # decel_lim_theta: -3.2
-      # vx_samples: 20
-      # vy_samples: 5
-      # vtheta_samples: 20
-      # sim_time: 1.7
-      # linear_granularity: 0.05
-      # angular_granularity: 0.025
-      # transform_tolerance: 0.2
-      # xy_goal_tolerance: 0.5
-      # trans_stopped_velocity: 0.25
-      # short_circuit_trajectory_evaluation: True
-      # stateful: True
-      # critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      # BaseObstacle.scale: 0.02
-      # PathAlign.scale: 32.0
-      # GoalAlign.scale: 24.0
-      # PathAlign.forward_point_distance: 0.1
-      # GoalAlign.forward_point_distance: 0.1
-      # PathDist.scale: 32.0
-      # GoalDist.scale: 24.0
-      # RotateToGoal.scale: 32.0
-      # RotateToGoal.slowing_factor: 5.0
-      # RotateToGoal.lookahead_time: -1.0
-
       plugin: "nav2_rotation_shim_controller::RotationShimController"
-      angular_dist_threshold: 0.25
+      angular_dist_threshold: 0.5
       rotate_to_goal_heading: True
-      forward_sampling_distance: 0.5
-      rotate_to_heading_angular_vel: 2.2 #1.8
+      forward_sampling_distance: 1.0 #0.5
+      rotate_to_heading_angular_vel: 1.0 #1.8
       max_angular_accel: 3.2
       simulate_ahead_time: 1.5 #1.0
 
-      primary_controller: "nav2_mppi_controller::MPPIController"
-      time_steps: 56
-      model_dt: 0.05
-      batch_size: 2000
-      vx_std: 0.2
-      vy_std: 0.2
-      wz_std: 0.4
-      vx_max: 1.0
-      vx_min: -0.5
-      wz_max: 2.0 #1.5
-      iteration_count: 1
-      # prune_distance: 1.5
-      retry_attempt_limit: 3
-      transform_tolerance: 0.5 #0.2
-      temperature: 0.3
-      gamma: 0.015
-      motion_model: "Ackermann" #Ackermann
-      visualize: false
-      reset_period: 1.0 # (only in Humble)
-      regenerate_noises: false
-      TrajectoryVisualizer:
-        trajectory_step: 5
-        time_step: 3
-      AckermannConstraints:
-        min_turning_r: 1.4
-      critics:
-        [
-          "ConstraintCritic",
-          "GoalCritic",
-          "GoalAngleCritic",
-          "PathAlignCritic",
-          "PathFollowCritic",
-          "PathAngleCritic",
-          "PreferForwardCritic",
-          "CostCritic",
-        ]
-      ConstraintCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 4.0
-      GoalCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 5.0
-        threshold_to_consider: 1.4
-      GoalAngleCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 3.0
-        threshold_to_consider: 1.0 #0.5
-      PreferForwardCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 5.0
-        threshold_to_consider: 0.5
-      # ObstaclesCritic:
-      #   enabled: true
-      #   cost_power: 1
-      #   repulsion_weight: 1.5
-      #   critical_weight: 20.0
-      #   consider_footprint: false
-      #   collision_cost: 10000.0
-      #   collision_margin_distance: 0.1
-      #   near_goal_distance: 0.5
-      #   inflation_radius: 0.55 # (only in Humble)
-      #   cost_scaling_factor: 10.0 # (only in Humble)
-      CostCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 3.81
-        critical_cost: 300.0
-        consider_footprint: true
-        collision_cost: 1000000.0
-        near_goal_distance: 1.0
-        trajectory_point_step: 2
-      PathAlignCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 14.0
-        max_path_occupancy_ratio: 0.05
-        trajectory_point_step: 4
-        threshold_to_consider: 0.5
-        offset_from_furthest: 20
-        use_path_orientations: false
-      PathFollowCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 5.0
-        offset_from_furthest: 5
-        threshold_to_consider: 1.4
-      PathAngleCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 2.0
-        offset_from_furthest: 4
-        threshold_to_consider: 0.5
-        max_angle_to_furthest: 0.7
-        mode: 2 #0
+      primary_controller: teb_local_planner::TebLocalPlannerROS
+
+      # Trajectory
+
+      teb_autosize: 1.0
+      dt_ref: 0.3
+      dt_hysteresis: 0.1
+      min_samples: 3
+      max_samples: 1000
+      global_plan_overwrite_orientation: False #True
+      allow_init_with_backwards_motion: True #False
+      global_plan_viapoint_sep: 0.1
+      via_points_ordered: False
+      max_global_plan_lookahead_dist: 5.0
+      global_plan_prune_distance: 2.0 #1.0
+      exact_arc_length: True #False
+      # force_reinit_new_goal_dist: 2.0
+      # force_reinit_new_goal_angular: 0.5
+      feasibility_check_no_poses: 5 #5
+      feasibility_check_lookahead_distance: -1.0
+      publish_feedback: False
+      control_look_ahead_poses: 1
+      prevent_look_ahead_poses_near_goal: 15 #0
+
+      # Robot
+
+      max_vel_x: 0.3
+      max_vel_x_backwards: 0.3
+      max_vel_theta: 1.0
+      acc_lim_x: 2.5
+      acc_lim_theta: 3.2
+      min_turning_radius: 1.6
+
+      footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
+        type: "polygon"
+        vertices: "[[0.38, 0.33], [0.38, -0.33], [-0.38, -0.33], [-0.38, 0.33]]"
+
+      # GoalTolerance
+      xy_goal_tolerance: 0.5 #0.25
+      yaw_goal_tolerance: 0.25
+      free_goal_vel: False
+      complete_global_plan: True
+      # trans_stopped_vel: 0.1
+      # theta_stopped_vel: 0.1
+
+      # Obstacles
+
+      min_obstacle_dist: 0.2
+      inflation_dist: 0.6
+      include_costmap_obstacles: True
+      costmap_obstacles_behind_robot_dist: 1.0
+      obstacle_poses_affected: 15
+
+      dynamic_obstacle_inflation_dist: 0.6
+      include_dynamic_obstacles: True
+
+      costmap_converter_plugin: "costmap_converter::CostmapToPolygonsDBSMCCH"
+      costmap_converter_spin_thread: True
+      costmap_converter_rate: 5
+
+      # Optimization
+
+      no_inner_iterations: 5
+      no_outer_iterations: 4
+      optimization_activate: True
+      optimization_verbose: False
+      penalty_epsilon: 0.1
+      obstacle_cost_exponent: 4.0
+      weight_max_vel_x: 1.0
+      weight_max_vel_theta: 1.0
+      weight_acc_lim_x: 1.0
+      weight_acc_lim_theta: 1.0
+      weight_kinematics_nh: 1000.0
+      weight_kinematics_forward_drive: 4.0
+      weight_kinematics_turning_radius: 3.0
+      weight_optimaltime: 1.0 # must be > 0
+      weight_shortest_path: 0.0
+      weight_obstacle: 100.0
+      weight_inflation: 0.2
+      weight_dynamic_obstacle: 10.0 
+      weight_dynamic_obstacle_inflation: 0.2
+      weight_viapoint: 50.0
+      weight_adapt_factor: 2.0
+
+      # Homotopy Class Planner
+
+      enable_homotopy_class_planning: True
+      enable_multithreading: True
+      simple_exploration: True #False
+      max_number_classes: 5 #5
+      selection_cost_hysteresis: 5.0 #1.0
+      selection_prefer_initial_plan: 1.0 #0.95
+      selection_obst_cost_scale: 1.0 #100.0
+      selection_viapoint_cost_scale: 1.0
+      selection_alternative_time_cost: False #False
+      selection_dropping_probability: 0.0
+
+      obstacle_keypoint_offset: 0.1
+      obstacle_heading_threshold: 0.45
+      roadmap_graph_no_samples: 15
+      roadmap_graph_area_width: 5.0 #6
+      roadmap_graph_area_length_scale: 1.0
+      h_signature_prescaler: 0.5 #1.0
+      h_signature_threshold: 0.1
+      switching_blocking_period: 0.0
+
+      viapoints_all_candidates: True
+      visualize_hc_graph: False
+      visualize_with_time_as_z_axis_scale: 0.0
+      delete_detours_backwards: False #True
+      length_start_orientation_vector: 0.4
+      max_ratio_detours_duration_best_duration: 3.0
+
+      # Recovery
+
+      shrink_horizon_backup: True
+      shrink_horizon_min_duration: 10.0
+      oscillation_recovery: True
+      oscillation_v_eps: 0.1
+      oscillation_omega_eps: 0.1
+      oscillation_recovery_min_duration: 10.0
+      oscillation_filter_duration: 10.0
 
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 10.0 #5.0
-      publish_frequency: 5.0 #2.0
+      update_frequency: 20.0 #10.0
+      publish_frequency: 10.0 #5.0
       global_frame: odom
       robot_base_frame: base_footprint
       use_sim_time: True
@@ -281,8 +266,8 @@ local_costmap:
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 2.0
-        inflation_radius: 0.4
+        cost_scaling_factor: 2.3
+        inflation_radius: 1.4
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -299,9 +284,9 @@ local_costmap:
           clearing: False
           marking: True
           data_type: "LaserScan"
-          raytrace_max_range: 3.0
+          raytrace_max_range: 4.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 2.5
+          obstacle_max_range: 4.0
           obstacle_min_range: 0.0
         scan_clearing:
           topic: /scan
@@ -309,9 +294,9 @@ local_costmap:
           clearing: True
           marking: False
           data_type: "LaserScan"
-          raytrace_max_range: 3.0
+          raytrace_max_range: 4.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 2.5
+          obstacle_max_range: 4.0
           obstacle_min_range: 0.0
       always_send_full_costmap: True
 
@@ -331,8 +316,8 @@ global_costmap:
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.3
+        cost_scaling_factor: 2.3
+        inflation_radius: 1.4
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -379,17 +364,17 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 10.0
+    expected_planner_frequency: 20.0
     use_sim_time: True
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_smac_planner/SmacPlannerHybrid" #nav2_navfn_planner/NavfnPlanner
       tolerance: 0.3
-      minimum_turning_radius: 1.4
+      minimum_turning_radius: 1.6
       allow_unknown: true
-      change_penalty: 0.2 #0.15 # For Hybrid nodes: penalty to apply if motion is changing directions, must be >= 0
+      change_penalty: 0.15 # For Hybrid nodes: penalty to apply if motion is changing directions, must be >= 0
       non_straight_penalty: 1.0 # For Hybrid nodes: penalty to apply if motion is non-straight, must be => 1
-      cost_penalty: 2.5 #2.0 # For Hybrid nodes: penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
+      cost_penalty: 2.0 # For Hybrid nodes: penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
       smoother:
         max_iterations: 1000
         w_smooth: 0.3
@@ -431,7 +416,7 @@ behavior_server:
     use_sim_time: true
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
-    min_rotational_vel: 0.5
+    min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
 
 robot_state_publisher:
@@ -457,41 +442,11 @@ velocity_smoother:
     feedback: "OPEN_LOOP"
     # max_velocity: [0.26, 0.0, 1.0]
     # min_velocity: [-0.26, 0.0, -1.0]
-    max_velocity: [0.30, 0.0, 1.0]
-    min_velocity: [-0.30, 0.0, -1.0]
+    max_velocity: [0.40, 0.0, 1.0]
+    min_velocity: [-0.40, 0.0, -1.0]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
-# collision_monitor:
-# ros__parameters:
-#   base_frame_id: "base_footprint"
-#   odom_frame_id: "odom"
-#   cmd_vel_in_topic: "cmd_vel_smoothed"
-#   cmd_vel_out_topic: "cmd_vel"
-#   state_topic: "collision_monitor_state"
-#   transform_tolerance: 0.5
-#   source_timeout: 1.0
-#   base_shift_correction: True
-#   stop_pub_timeout: 2.0
-#   # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
-#   # and robot footprint for "approach" action type.
-#   polygons: ["FootprintApproach"]
-#   FootprintApproach:
-#     type: "polygon"
-#     action_type: "approach"
-#     footprint_topic: "/local_costmap/published_footprint"
-#     time_before_collision: 1.2
-#     simulation_time_step: 0.1
-#     min_points: 6
-#     visualize: False
-#     enabled: True
-#   observation_sources: ["scan"]
-#   scan:
-#     type: "scan"
-#     topic: "/scan"
-#     min_height: 0.15
-#     max_height: 2.0
-#     enabled: True
