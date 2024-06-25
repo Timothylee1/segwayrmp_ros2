@@ -152,7 +152,7 @@ controller_server:
 
       # Robot
 
-      max_vel_x: 0.3
+      max_vel_x: 0.5
       max_vel_x_backwards: 0.3
       max_vel_theta: 1.0
       acc_lim_x: 2.5
@@ -267,7 +267,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 2.3
-        inflation_radius: 1.4
+        inflation_radius: 1.0
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -317,7 +317,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 2.3
-        inflation_radius: 1.4
+        inflation_radius: 1.0
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -442,8 +442,8 @@ velocity_smoother:
     feedback: "OPEN_LOOP"
     # max_velocity: [0.26, 0.0, 1.0]
     # min_velocity: [-0.26, 0.0, -1.0]
-    max_velocity: [0.40, 0.0, 1.0]
-    min_velocity: [-0.40, 0.0, -1.0]
+    max_velocity: [0.60, 0.0, 1.0]
+    min_velocity: [-0.60, 0.0, -1.0]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odom"
