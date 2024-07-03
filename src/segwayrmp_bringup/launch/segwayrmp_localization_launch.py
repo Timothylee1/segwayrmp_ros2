@@ -134,18 +134,18 @@ def generate_launch_description():
                 arguments=["--ros-args", "--log-level", log_level],
                 remappings=remappings,
             ),
-            Node(
-                package="robot_localization",
-                executable="ekf_node",
-                name="ekf_filter_node",
-                output="screen",
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[
-                    ekf_configured_params,
-                    {"use_sim_time": use_sim_time},
-                ],
-            ),
+            # Node(
+            #     package="robot_localization",
+            #     executable="ekf_node",
+            #     name="ekf_filter_node",
+            #     output="screen",
+            #     respawn=use_respawn,
+            #     respawn_delay=2.0,
+            #     parameters=[
+            #         ekf_configured_params,
+            #         {"use_sim_time": use_sim_time},
+            #     ],
+            # ),
             Node(
                 package="nav2_amcl",
                 executable="amcl",
@@ -183,14 +183,14 @@ def generate_launch_description():
                 parameters=[nav2_configured_params],
                 remappings=remappings,
             ),
-            ComposableNode(
-                package="robot_localization",
-                plugin="robot_localization::EkfNode",
-                name="ekf_filter_node",
-                parameters=[
-                    {"use_sim_time": use_sim_time},
-                ],
-            ),
+            # ComposableNode(
+            #     package="robot_localization",
+            #     plugin="robot_localization::EkfNode",
+            #     name="ekf_filter_node",
+            #     parameters=[
+            #         {"use_sim_time": use_sim_time},
+            #     ],
+            # ),
             ComposableNode(
                 package="nav2_amcl",
                 plugin="nav2_amcl::AmclNode",
@@ -224,7 +224,7 @@ def generate_launch_description():
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_nav2_params_file_cmd)
-    ld.add_action(declare_ekf_params_file_cmd)
+    # ld.add_action(declare_ekf_params_file_cmd)
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_use_composition_cmd)
     ld.add_action(declare_container_name_cmd)
