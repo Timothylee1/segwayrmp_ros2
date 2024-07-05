@@ -18,9 +18,6 @@ Stephen Brawner (brawner@gmail.com)
   <xacro:property name="wheel_length" value="0.05" />
   <xacro:property name="wheel_radius" value="0.1" />
 
-  <!-- Dummy root link -->
-  <link name="world_link" />
-
   <!-- Robot Base -->
   <link name="base_link">
     <inertial>
@@ -50,13 +47,6 @@ Stephen Brawner (brawner@gmail.com)
     </collision>
   </link>
 
-  <!-- Fixed joint between world_link and base_link -->
-  <joint name="world_joint" type="fixed">
-    <parent link="world_link" />
-    <child link="base_link" />
-    <origin xyz="0 0 0" rpy="0 0 0" />
-  </joint>
-
   <!-- Robot Footprint -->
   <link name="base_footprint" />
 
@@ -75,7 +65,7 @@ Stephen Brawner (brawner@gmail.com)
     <origin xyz="0 0 0.14" rpy="0 0 0" />
   </xacro:segwayrmp_imu>
 
-  <!-- Pivot -->
+  <!-- Steering -->
   <link name="front_pivot_Link">
     <inertial>
       <origin
@@ -85,10 +75,10 @@ Stephen Brawner (brawner@gmail.com)
         value="0.636763996187421" />
       <inertia
         ixx="0.000522373966033037"
-        ixy="6.88842321153043E-11"
-        ixz="-2.55687287488004E-10"
+        ixy="0"
+        ixz="0"
         iyy="0.000692728712644784"
-        iyz="1.31394242797586E-12"
+        iyz="0"
         izz="0.000643891365515844" />
     </inertial>
     <visual>
@@ -114,13 +104,45 @@ Stephen Brawner (brawner@gmail.com)
     <parent link="base_link" />
     <child link="front_pivot_Link" />
     <axis xyz="0 -1 0" />
-    <limit
-      lower="-0.36"
-      upper="0.36"
-      effort="0"
-      velocity="0" />
+    <limit lower="-0.36" upper="0.36" effort="0" velocity="0" />
+  </joint>
+  
+  <link name="steering_wheel_Link">
+    <inertial>
+      <origin
+        xyz="0.00350625991709064 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="0.001" />
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
+    </inertial>
+  </link>
+  <joint name="steering_wheel_joint" type="continuous">
+    <origin xyz="0 0.46 0.15" rpy="1.5708 0 0" />
+    <parent link="base_link" />
+    <child link="steering_wheel_Link" />
+    <axis xyz="0 -1 0" />
   </joint>
 
+  <link name="left_steering_link">
+    <inertial>
+      <origin
+        xyz="0.00350625991709064 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="0.001" />
+        <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
+    </inertial>
+  </link>
+  <joint name="left_steering_joint" type="revolute">
+    <origin xyz="0 0.46 0.15" rpy="1.5708 0 0" />
+    <parent link="base_link" />
+    <child link="left_steering_link" />
+    <axis xyz="0 -1 0" />
+    <limit lower="-0.36" upper="0.36" effort="0" velocity="0" />
+  </joint>
+
+  <!-- Wheels -->
   <link name="front_left_wheel_Link">
     <inertial>
       <origin
