@@ -4,15 +4,19 @@ Stephen Brawner (brawner@gmail.com)
      Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 
-<robot name="segwayrmp_description" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="segwayrmp_urdf" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="robot_namespace" default="/" />
+  <xacro:include filename="$(find segwayrmp_description)/urdf/segwayrmp_xacro.xacro" />
+  <!-- <xacro:include filename="$(find segwayrmp_description)/urdf/segwayrmp_steering.xacro" /> -->
+  <xacro:include filename="$(find segwayrmp_description)/urdf/segwayrmp_ackerman.gazebo" />
+
   <!-- Define robot constants -->
   <xacro:property name="base_length" value="0.18" />
   <xacro:property name="base_width" value="0.61" />
   <xacro:property name="base_height" value="0.09" />
-  <xacro:arg name="robot_namespace" default="/" />
 
-  <!-- Dummy root link -->
-  <link name="world_link" />
+  <xacro:property name="wheel_length" value="0.05" />
+  <xacro:property name="wheel_radius" value="0.1" />
 
   <!-- Robot Base -->
   <link name="base_link">
@@ -27,8 +31,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0.24 0.21" rpy="0 0 0" />
       <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/chejia_link.stl" /> -->
-        <box size="${base_length} ${base_width} ${base_height}"/>
+        <box size="${base_length} ${base_width} ${base_height}" />
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
@@ -37,77 +40,88 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0.24 0.21" rpy="0 0 0" />
       <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/chejia_link.stl" /> -->
-        <box size="${base_length} ${base_width} ${base_height}"/>
+        <box size="${base_length} ${base_width} ${base_height}" />
       </geometry>
     </collision>
   </link>
 
-  <!-- Fixed joint between world_link and base_link -->
-  <joint name="world_joint" type="fixed">
-    <parent link="world_link" />
-    <child link="base_link" />
-    <origin xyz="0 0 0" rpy="0 0 0" />
-  </joint>
+  <!-- Sensors -->
+  <xacro:segwayrmp_laser parent_prefix="base_link" frame_prefix="laser">
+    <origin xyz="0 0.46 0.26" rpy="0 0 0" />
+  </xacro:segwayrmp_laser>
 
-  <!-- Robot Footprint -->
-  <link name="base_footprint" />
+  <xacro:segwayrmp_imu parent_prefix="base_link" frame_prefix="imu">
+    <origin xyz="0 0 0.14" rpy="0 0 0" />
+  </xacro:segwayrmp_imu>
 
-  <joint name="base_joint" type="fixed">
-    <parent link="base_link" />
-    <child link="base_footprint" />
-    <origin xyz="0.0 0.26 0" rpy="0 0 0" />
-  </joint>
-
-  <link name="FrontPivot_Link">
+  <!-- Steering -->
+  <link name="steering_wheel_link">
     <inertial>
       <origin
-        xyz="0.00350625991709064 0 0"
+        xyz="0 0 0"
         rpy="0 0 0" />
       <mass
-        value="0.636763996187421" />
-      <inertia
-        ixx="0.000522373966033037"
-        ixy="6.88842321153043E-11"
-        ixz="-2.55687287488004E-10"
-        iyy="0.000692728712644784"
-        iyz="1.31394242797586E-12"
-        izz="0.000643891365515844" />
+        value="0.001" />
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
     </inertial>
-    <visual>
-      <origin xyz="0 -0.06 0" rpy="0 1.57 0" />
-      <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/zhuanxiangjia_Link.stl" /> -->
-        <cylinder radius="0.07" length="0.44"/>
-      </geometry>
-      <material name="">
-        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 -0.06 0" rpy="0 1.57 0" />
-      <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/zhuanxiangjia_Link.stl" /> -->
-        <cylinder radius="0.07" length="0.44"/>
-      </geometry>
-    </collision>
   </link>
-  <joint name="FrontPivot_joint" type="revolute">
+  <joint name="steering_wheel_joint" type="revolute">
     <origin xyz="0 0.46 0.15" rpy="1.5708 0 0" />
     <parent link="base_link" />
-    <child link="FrontPivot_Link" />
+    <child link="steering_wheel_link" />
     <axis xyz="0 -1 0" />
-    <limit
-      lower="-0.36"
-      upper="0.36"
-      effort="0"
-      velocity="0" />
+    <limit lower="-0.36" upper="0.36" effort="0" velocity="1.0" />
+    <dynamics damping="1.0" friction="2.0" />
   </joint>
-  <link
-    name="LeftFrontWheel_Link">
+
+  <link name="front_left_steering_link">
     <inertial>
       <origin
-        xyz="-0.175 0 0"
+        xyz="-0.1715 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="0.001" />
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
+    </inertial>
+  </link>
+  <joint name="front_left_steering_joint" type="revolute">
+    <origin
+      xyz="-0.092435 -0.06 0"
+      rpy="2.9877 0 0" />
+    <parent link="steering_wheel_link" />
+    <child link="front_left_steering_link" />
+    <axis xyz="0 1 0" />
+    <limit lower="-0.36" upper="0.36" effort="1" velocity="1.0" />
+    <dynamics damping="1.0" friction="2.0" />
+  </joint>
+
+
+  <link name="front_right_steering_link">
+    <inertial>
+      <origin
+        xyz="-0.17 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="0.001" />
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
+    </inertial>
+  </link>
+  <joint name="front_right_steering_joint" type="revolute">
+    <origin
+      xyz="0.099447 -0.06 0"
+      rpy="-1.6671 0 3.1416" />
+    <parent link="steering_wheel_link" />
+    <child link="front_right_steering_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.36" upper="0.36" effort="1" velocity="1.0" />
+    <dynamics damping="1.0" friction="2.0" />
+  </joint>
+
+  <!-- Wheels -->
+  <link name="front_left_wheel_link">
+    <inertial>
+      <origin
+        xyz="-0.17 0 0"
         rpy="0 0 0" />
       <mass
         value="0.379124506048444" />
@@ -124,13 +138,10 @@ Stephen Brawner (brawner@gmail.com)
         xyz="-0.165 0 0"
         rpy="0 1.57 0" />
       <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/zuohoulun_Link.stl" /> -->
-        <cylinder radius="0.1" length="0.05"/>
+        <cylinder radius="${wheel_radius}" length="${wheel_length}" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
       </material>
     </visual>
     <collision>
@@ -138,32 +149,26 @@ Stephen Brawner (brawner@gmail.com)
         xyz="-0.165 0 0"
         rpy="0 1.57 0" />
       <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/zuohoulun_Link.stl" /> -->
-        <cylinder radius="0.1" length="0.05"/>
+        <cylinder radius="${wheel_radius}" length="${wheel_length}" />
       </geometry>
     </collision>
   </link>
-  <joint
-    name="LeftFrontWheel_joint"
-    type="continuous">
+  <joint name="front_left_wheel_joint" type="continuous">
     <origin
-      xyz="-0.092435 -0.06 0"
+      xyz="0 0 0"
       rpy="2.9877 0 0" />
-    <parent
-      link="FrontPivot_Link" />
-    <child
-      link="LeftFrontWheel_Link" />
-    <axis
-      xyz="1 0 0" />
+    <parent link="front_left_steering_link" />
+    <child link="front_left_wheel_link" />
+    <axis xyz="1 0 0" />
+    <dynamics damping="1.0" friction="2.0" />
   </joint>
-  <link
-    name="RightFrontWheel_Link">
+
+  <link name="front_right_wheel_link">
     <inertial>
       <origin
-        xyz="-0.175 0.01 0"
-        rpy="0 0 0" />
-      <mass
-        value="0.37912408551256" />
+        xyz="0.17 0 0"
+        rpy="0 1.57 0" />
+      <mass value="0.37912408551256" />
       <inertia
         ixx="0.0013562336762928"
         ixy="-2.05946493125457E-08"
@@ -174,49 +179,40 @@ Stephen Brawner (brawner@gmail.com)
     </inertial>
     <visual>
       <origin
-        xyz="-0.165 0 0"
+        xyz="0.165 0 0"
         rpy="0 1.57 0" />
       <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/zuohoulun_Link.stl" /> -->
-        <cylinder radius="0.1" length="0.05"/>
+        <cylinder radius="${wheel_radius}" length="${wheel_length}" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
       </material>
     </visual>
     <collision>
       <origin
-        xyz="-0.165 0 0"
+        xyz="0.165 0 0"
         rpy="0 1.57 0" />
       <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/zuohoulun_Link.stl" /> -->
-        <cylinder radius="0.1" length="0.05"/>
+        <cylinder radius="${wheel_radius}" length="${wheel_length}" />
       </geometry>
     </collision>
   </link>
-  <joint
-    name="RightFrontWheel_joint"
-    type="continuous">
+  <joint name="front_right_wheel_joint" type="continuous">
     <origin
-      xyz="0.099447 -0.06 0"
+      xyz="0 0 0"
       rpy="-1.6671 0 3.1416" />
-    <parent
-      link="FrontPivot_Link" />
-    <child
-      link="RightFrontWheel_Link" />
-    <axis
-      xyz="1 0 0" />
+    <parent link="front_right_steering_link" />
+    <child link="front_right_wheel_link" />
+    <axis xyz="1 0 0" />
+    <dynamics damping="1.0" friction="2.0" />
   </joint>
-  <link
-    name="LeftRearWheel_Link">
+
+  <link name="rear_left_wheel_link">
     <inertial>
       <origin
         xyz="-0.175 4.72112875317676E-05 9.00201436271342E-06"
         rpy="0 0 0" />
-      <mass
-        value="0.634779873374433" />
+      <mass value="0.634779873374433" />
       <inertia
         ixx="0.00181854534335576"
         ixy="3.33041385279325E-07"
@@ -230,13 +226,10 @@ Stephen Brawner (brawner@gmail.com)
         xyz="-0.165 0 0"
         rpy="0 1.57 0" />
       <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/zuohoulun_Link.stl" /> -->
-        <cylinder radius="0.1" length="0.05"/>
+        <cylinder radius="${wheel_radius}" length="${wheel_length}" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
       </material>
     </visual>
     <collision>
@@ -244,32 +237,26 @@ Stephen Brawner (brawner@gmail.com)
         xyz="-0.165 0 0"
         rpy="0 1.57 0" />
       <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/zuohoulun_Link.stl" /> -->
-        <cylinder radius="0.1" length="0.05"/>
+        <cylinder radius="${wheel_radius}" length="${wheel_length}" />
       </geometry>
     </collision>
   </link>
-  <joint
-    name="LeftRearWheel_joint"
-    type="continuous">
+  <joint name="rear_left_wheel_joint" type="continuous">
     <origin
       xyz="-0.1 0.01 0.09"
       rpy="1.5708 0 0" />
-    <parent
-      link="base_link" />
-    <child
-      link="LeftRearWheel_Link" />
-    <axis
-      xyz="1 0 0" />
+    <parent link="base_link" />
+    <child link="rear_left_wheel_link" />
+    <axis xyz="1 0 0" />
+    <dynamics damping="1.0" friction="2.0" />
   </joint>
-  <link
-    name="RightRearWheel_Link">
+
+  <link name="rear_right_wheel_link">
     <inertial>
       <origin
         xyz="-0.175 4.72492608288855E-05 9.01686700283122E-06"
         rpy="0 0 0" />
-      <mass
-        value="0.634778552429949" />
+      <mass value="0.634778552429949" />
       <inertia
         ixx="0.00181854505148151"
         ixy="3.32515010548019E-07"
@@ -283,13 +270,10 @@ Stephen Brawner (brawner@gmail.com)
         xyz="-0.165 0 0"
         rpy="0 1.57 0" />
       <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/zuohoulun_Link.stl" /> -->
-        <cylinder radius="0.1" length="0.05"/>
+        <cylinder radius="${wheel_radius}" length="${wheel_length}" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
       </material>
     </visual>
     <collision>
@@ -297,129 +281,17 @@ Stephen Brawner (brawner@gmail.com)
         xyz="-0.165 0 0"
         rpy="0 1.57 0" />
       <geometry>
-        <!-- <mesh filename="package://segwayrmp_description/meshes/zuohoulun_Link.stl" /> -->
-        <cylinder radius="0.1" length="0.05"/>
+        <cylinder radius="${wheel_radius}" length="${wheel_length}" />
       </geometry>
     </collision>
   </link>
-  <joint
-    name="RightRearWheel_joint"
-    type="continuous">
+  <joint name="rear_right_wheel_joint" type="continuous">
     <origin
       xyz="0.1 0.01 0.09"
       rpy="0.17453 0 -3.1416" />
-    <parent
-      link="base_link" />
-    <child
-      link="RightRearWheel_Link" />
-    <axis
-      xyz="1 0 0" />
-  </joint>
-
-  <!-- imu -->
-  <link name="imu_link">
-  </link>
-
-  <joint name="imu_joint" type="fixed">
     <parent link="base_link" />
-    <child link="imu_link" />
-    <origin xyz="0 0 0.17" />
+    <child link="rear_right_wheel_link" />
+    <axis xyz="1 0 0" />
+    <dynamics damping="1.0" friction="2.0" />
   </joint>
-
-  <gazebo reference="imu_link">
-    <sensor name="imu_sensor" type="imu">
-      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
-        <ros>
-          <namespace>$(arg robot_namespace)</namespace>
-          <remapping>~/out:=imu</remapping>
-        </ros>
-        <initial_orientation_as_reference>false</initial_orientation_as_reference>
-      </plugin>
-      <always_on>true</always_on>
-      <update_rate>100</update_rate>
-      <visualize>true</visualize>
-      <imu>
-        <angular_velocity>
-          <x>
-            <noise type="gaussian">
-              <mean>0.0</mean>
-              <stddev>2e-4</stddev>
-              <bias_mean>0.0000075</bias_mean>
-              <bias_stddev>0.0000008</bias_stddev>
-            </noise>
-          </x>
-          <y>
-            <noise type="gaussian">
-              <mean>0.0</mean>
-              <stddev>2e-4</stddev>
-              <bias_mean>0.0000075</bias_mean>
-              <bias_stddev>0.0000008</bias_stddev>
-            </noise>
-          </y>
-          <z>
-            <noise type="gaussian">
-              <mean>0.0</mean>
-              <stddev>2e-4</stddev>
-              <bias_mean>0.0000075</bias_mean>
-              <bias_stddev>0.0000008</bias_stddev>
-            </noise>
-          </z>
-        </angular_velocity>
-        <linear_acceleration>
-          <x>
-            <noise type="gaussian">
-              <mean>0.0</mean>
-              <stddev>1.7e-2</stddev>
-              <bias_mean>0.1</bias_mean>
-              <bias_stddev>0.001</bias_stddev>
-            </noise>
-          </x>
-          <y>
-            <noise type="gaussian">
-              <mean>0.0</mean>
-              <stddev>1.7e-2</stddev>
-              <bias_mean>0.1</bias_mean>
-              <bias_stddev>0.001</bias_stddev>
-            </noise>
-          </y>
-          <z>
-            <noise type="gaussian">
-              <mean>0.0</mean>
-              <stddev>1.7e-2</stddev>
-              <bias_mean>0.1</bias_mean>
-              <bias_stddev>0.001</bias_stddev>
-            </noise>
-          </z>
-        </linear_acceleration>
-      </imu>
-    </sensor>
-  </gazebo>
-
-  <!-- gazebo controller -->
-  <gazebo>
-    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-      <robotNamespace>$(arg robot_namespace)</robotNamespace>
-    </plugin>
-
-    <plugin name="gazebo_ros_ackermann_drive" filename="libgazebo_ros_ackermann_drive.so">
-      <updateRate>100.0</updateRate>
-      <robotNamespace>$(arg robot_namespace)</robotNamespace>
-      <leftFrontJoint>LeftFrontWheel_joint</leftFrontJoint>
-      <rightFrontJoint>RightFrontWheel_joint</rightFrontJoint>
-      <leftRearJoint>LeftRearWheel_joint</leftRearJoint>
-      <rightRearJoint>RightRearWheel_joint</rightRearJoint>
-      <pivotJoint>FrontPivot_joint</pivotJoint>
-      <wheelSeparation>0.45</wheelSeparation>
-      <wheelDiameter>0.2</wheelDiameter>
-      <robotBaseFrame>base_link</robotBaseFrame>
-      <commandTopic>cmd_vel</commandTopic>
-      <torque>50</torque>
-      <broadcastTF>true</broadcastTF>
-      <odometryTopic>odom</odometryTopic>
-      <odometryFrame>odom</odometryFrame>
-      <covariance_x>0.000100</covariance_x>
-      <covariance_y>0.000100</covariance_y>
-      <covariance_yaw>0.010000</covariance_yaw>
-    </plugin>
-  </gazebo>
 </robot>

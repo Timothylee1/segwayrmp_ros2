@@ -15,7 +15,7 @@ def generate_launch_description():
   package_name = 'segwayrmp_description'
   robot_name_in_model = 'segwayrmp_description'
   rviz_config_file_path = 'rviz/default_view.rviz'
-  urdf_file_path = 'urdf/segwayrmp.urdf'
+  urdf_file_path = 'urdf/segwayrmp.urdf.xacro'
   world_file_path = 'worlds/empty_world.world'
  
   # Pose where we want to spawn the robot
