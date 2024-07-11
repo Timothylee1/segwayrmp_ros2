@@ -15,15 +15,15 @@
         </transmission>
     </xacro:macro>
 
-    <xacro:macro name="segwayrmp_steering_transmission" params="wheel_prefix">
-        <transmission name="${wheel_prefix}_wheel_trans" type="SimpleTransmission">
+    <xacro:macro name="segwayrmp_steering_transmission" params="steering_prefix">
+        <transmission name="${steering_prefix}_wheel_trans" type="SimpleTransmission">
             <type>transmission_interface/SimpleTransmission</type>
-            <actuator name="${wheel_prefix}_wheel_motor">
+            <actuator name="${steering_prefix}_wheel_motor">
                 <!-- <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface> -->
                 <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
-            <joint name="${wheel_prefix}_wheel">
+            <joint name="${steering_prefix}_wheel">
                 <!-- <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface> -->
                 <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
             </joint>

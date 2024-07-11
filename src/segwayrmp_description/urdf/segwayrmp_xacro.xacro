@@ -4,13 +4,13 @@
     <link name="${wheel_prefix}_wheel_link">
       <inertial>
         <origin xyz="0 0 0" />
-        <mass value="0.5" />
+        <mass value="0.3" />
         <inertia ixx="0.01055" ixy="0" ixz="0" iyy="0.00075" iyz="0" izz="0.01055" />
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <cylinder radius="0.1" length="0.05" />
+          <cylinder radius="${wheel_length}" length="${wheel_radius}"/>
         </geometry>
       </visual>
       <collision>
@@ -25,10 +25,39 @@
       <parent link="${parent_prefix}" />
       <child link="${wheel_prefix}_wheel_link" />
       <xacro:insert_block name="joint_pose" />
-      <axis xyz="0 ${reflect*1} 0" />
+      <axis xyz="${reflect*1} 0 0" />
     </joint>
   </xacro:macro>
 
+  <xacro:macro name="segwayrmp_steering" params="parent_prefix steering_prefix *joint_pose">
+    <link name="${steering_prefix}_link">
+      <inertial>
+        <origin xyz="0 0 0" />
+        <mass value="0.3" />
+        <inertia ixx="0.0008778" ixy="0.0" ixz="0.0" iyy="0.00011879" iyz="0.0" izz="0.0008778" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.01 0.01 0.01" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.01 0.01 0.01" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${steering_prefix}_joint" type="revolute">
+      <parent link="${parent_prefix}" />
+      <child link="${steering_prefix}_link" />
+      <xacro:insert_block name="joint_pose" />
+      <axis xyz="0 1 0" />
+      <limit lower="-0.36" upper="0.36" effort="0" velocity="1.0" />
+    </joint>
+  </xacro:macro>
 
   <xacro:macro name="segwayrmp_laser" params="parent_prefix frame_prefix *joint_pose">
     <link name='${frame_prefix}_link'>

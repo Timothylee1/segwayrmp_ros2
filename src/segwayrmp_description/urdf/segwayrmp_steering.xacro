@@ -1,56 +1,64 @@
 <?xml version="1.0"?>
 <robot name="segwayrmp_steering" xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:macro name="segwayrmp_steering" params="parent_prefix wheel_prefix *joint_pose">
-    <link name="${wheel_prefix}">
+  <xacro:macro name="segwayrmp_steering" params="parent_prefix steering_prefix *joint_pose">
+    <link name="${steering_prefix}">
       <inertial>
-        <mass value="0.25" />
-        <inertia ixx="0.00525" ixy="0" ixz="0" iyy="0.00035" iyz="0" izz="0.00525" />
-        <origin xyz="0 0 0" />
-
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <mass value="0.3" />
+        <inertia ixx="0.0008778" ixy="0.0" ixz="0.0" iyy="0.00011879" iyz="0.0" izz="0.0008778" />
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <cylinder length="0.0001" radius="0.0001" />
+          <box size="0.01 0.01 0.01" />
         </geometry>
+        <material name="">
+          <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+        </material>
       </visual>
       <collision>
-        <origin xyz="0 ${wheel_length/2} 0" rpy="1.57 0 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <cylinder length="${wheel_length}" radius="${wheel_radius-0.01}" />
+          <box size="0.01 0.01 0.01" />
         </geometry>
       </collision>
     </link>
 
-    <joint name="${wheel_prefix}_wheel" type="revolute">
+    <joint name="${steering_prefix}_wheel" type="revolute">
       <parent link="${parent_prefix}" />
-      <child link="${wheel_prefix}" />
+      <child link="${steering_prefix}" />
       <xacro:insert_block name="joint_pose" />
-      <axis xyz="0 0 1" />
-      <limit lower="-0.523598767" upper="0.523598767" effort="5" velocity="0.5" />
-      <dynamics damping="1.0" friction="2.0" />
-
+      <axis xyz="0 1 0" />
+      <limit lower="-0.36" upper="0.36" effort="5" velocity="1.0" />
+      <dynamics damping="1.0" friction="1.0" />
     </joint>
 
     <link name="front_left_wheel_link">
       <inertial>
-        <mass value="0.25" />
-        <inertia ixx="0.00525" ixy="0" ixz="0" iyy="0.00035" iyz="0" izz="0.00525" />
+        <mass value="0.379124506048444" />
+        <inertia
+          ixx="0.00135623331658277"
+          ixy="-2.05858146537997E-08"
+          ixz="2.75425144310775E-07"
+          iyy="0.00074553860560749"
+          iyz="-2.05160697747808E-08"
+          izz="0.000744863292198173" />
         <origin xyz="0 0 0" />
 
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <!-- <mesh filename="file://$(find segwayrmp_description)/meshes/segwayrmp_wheel.dae" /> -->
-          <cylinder radius="0.1" length="0.05" />
+          <cylinder radius="${wheel_radius}" length="${wheel_length}" />
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 ${wheel_length/2} 0" rpy="1.57 0 0" />
+        <origin xyz="0 0 0" rpy="1.57 0 0" />
         <geometry>
-          <cylinder length="${wheel_length}" radius="${wheel_radius}" />
+          <cylinder radius="${wheel_radius}" length="${wheel_length}" />
         </geometry>
       </collision>
     </link>
@@ -59,7 +67,7 @@
       <parent link="${wheel_prefix}" />
       <child link="front_left_wheel_link" />
       <origin xyz="0 0 0" rpy="0 0  0" />
-      <axis xyz="0 1 0" />
+      <axis xyz="1 0 0" />
     </joint>
   </xacro:macro>
 
@@ -90,27 +98,31 @@
       <child link="${wheel_prefix}" />
       <xacro:insert_block name="joint_pose" />
       <axis xyz="1 0 0" />
-      <!-- <limit lower="-0.523598767" upper="0.523598767" effort="5" velocity="0.5" /> -->
-      <dynamics damping="1.0" friction="2.0" />
+      <dynamics damping="1.0" friction="1.0" />
     </joint>
 
     <link name="front_right_wheel_link">
       <inertial>
-        <mass value="0.25" />
-        <inertia ixx="0.00525" ixy="0" ixz="0" iyy="0.00035" iyz="0" izz="0.00525" />
+        <mass value="0.379124506048444" />
+        <inertia
+          ixx="0.00135623331658277"
+          ixy="-2.05858146537997E-08"
+          ixz="2.75425144310775E-07"
+          iyy="0.00074553860560749"
+          iyz="-2.05160697747808E-08"
+          izz="0.000744863292198173" />
         <origin xyz="0 0 0" />
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <!-- <mesh filename="file://$(find segwayrmp_description)/meshes/segwayrmp_wheel.dae" /> -->
-          <cylinder radius="0.1" length="0.05" />
+          <cylinder radius="${wheel_radius}" length="${wheel_length}" />
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 ${wheel_length/2} 0" rpy="1.57 0 0" />
+        <origin xyz="0 0 0" rpy="1.57 0 0" />
         <geometry>
-          <cylinder length="${wheel_length}" radius="${wheel_radius}" />
+          <cylinder radius="${wheel_radius}" length="${wheel_length}" />
         </geometry>
       </collision>
     </link>
@@ -119,7 +131,7 @@
       <parent link="${wheel_prefix}" />
       <child link="front_right_wheel_link" />
       <origin xyz="0 0 0" rpy="0 0  0" />
-      <axis xyz="0 -1 0" />
+      <axis xyz="1 0 0" />
     </joint>
   </xacro:macro>
 </robot>

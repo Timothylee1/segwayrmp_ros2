@@ -22,9 +22,9 @@ Stephen Brawner (brawner@gmail.com)
   <link name="base_link">
     <inertial>
       <origin
-        xyz="0 0.23 0.19"
+        xyz="0 0.2 0.19"
         rpy="0 0 0" />
-      <mass value="2.42397545608915" />
+      <mass value="12.0" />
       <inertia ixx="0.0296962022350776" ixy="0" ixz="0"
         iyy="0.00646533575042488" iyz="0" izz="0.0331663553221158" />
     </inertial>
@@ -60,71 +60,75 @@ Stephen Brawner (brawner@gmail.com)
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
-      <mass
-        value="0.001" />
-      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
+      <mass value="0.3" />
+      <inertia ixx="0.0008778" ixy="0.0" ixz="0.0" iyy="0.00011879" iyz="0.0" izz="0.0008778" />
     </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.01 0.01 0.01" />
+      </geometry>
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.01 0.01 0.01" />
+      </geometry>
+    </collision>
   </link>
   <joint name="steering_wheel_joint" type="revolute">
     <origin xyz="0 0.46 0.15" rpy="1.5708 0 0" />
     <parent link="base_link" />
     <child link="steering_wheel_link" />
-    <axis xyz="0 -1 0" />
-    <limit lower="-0.36" upper="0.36" effort="0" velocity="1.0" />
-    <dynamics damping="1.0" friction="2.0" />
-  </joint>
-
-  <link name="front_left_steering_link">
-    <inertial>
-      <origin
-        xyz="-0.1715 0 0"
-        rpy="0 0 0" />
-      <mass
-        value="0.001" />
-      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
-    </inertial>
-  </link>
-  <joint name="front_left_steering_joint" type="revolute">
-    <origin
-      xyz="-0.092435 -0.06 0"
-      rpy="2.9877 0 0" />
-    <parent link="steering_wheel_link" />
-    <child link="front_left_steering_link" />
     <axis xyz="0 1 0" />
-    <limit lower="-0.36" upper="0.36" effort="1" velocity="1.0" />
-    <dynamics damping="1.0" friction="2.0" />
+    <limit lower="-0.36" upper="0.36" effort="5" velocity="1.0" />
+    <dynamics damping="0.1" friction="1.0" />
   </joint>
 
-
-  <link name="front_right_steering_link">
+  <link name="front_wheels_link">
     <inertial>
       <origin
-        xyz="-0.17 0 0"
-        rpy="0 0 0" />
-      <mass
-        value="0.001" />
-      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
+        xyz="0 0 0"
+        rpy="0 0 1.57" />
+      <mass value="0.379124506048444" />
+      <inertia ixx="0.00001697" ixy="0.0" ixz="0.0" iyy="0.01254" iyz="0.0" izz="0.01254" />
     </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.57 0" />
+      <geometry>
+        <cylinder radius="0.07" length="0.45" />
+      </geometry>
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.57 0" />
+      <geometry>
+        <cylinder radius="0.07" length="0.45" />
+      </geometry>
+    </collision>
   </link>
-  <joint name="front_right_steering_joint" type="revolute">
+  <joint name="front_wheels_joint" type="continuous">
     <origin
-      xyz="0.099447 -0.06 0"
-      rpy="-1.6671 0 3.1416" />
+      xyz="0 -0.06 0"
+      rpy="0 0 0" />
     <parent link="steering_wheel_link" />
-    <child link="front_right_steering_link" />
-    <axis xyz="0 0 1" />
-    <limit lower="-0.36" upper="0.36" effort="1" velocity="1.0" />
-    <dynamics damping="1.0" friction="2.0" />
+    <child link="front_wheels_link" />
+    <axis xyz="-1 0 0" />
+    <dynamics damping="0.1" friction="1.0" />
   </joint>
 
   <!-- Wheels -->
   <link name="front_left_wheel_link">
     <inertial>
       <origin
-        xyz="-0.17 0 0"
+        xyz="-0.175 0 0"
         rpy="0 0 0" />
-      <mass
-        value="0.379124506048444" />
+      <mass value="0.379124506048444" />
       <inertia
         ixx="0.00135623331658277"
         ixy="-2.05858146537997E-08"
@@ -153,29 +157,29 @@ Stephen Brawner (brawner@gmail.com)
       </geometry>
     </collision>
   </link>
-  <joint name="front_left_wheel_joint" type="continuous">
+  <joint name="front_left_wheel_joint" type="fixed">
     <origin
-      xyz="0 0 0"
-      rpy="2.9877 0 0" />
-    <parent link="front_left_steering_link" />
+      xyz="-0.1 0 0"
+      rpy="3.14 0 0" />
+    <parent link="front_wheels_link" />
     <child link="front_left_wheel_link" />
-    <axis xyz="1 0 0" />
-    <dynamics damping="1.0" friction="2.0" />
+    <!-- <axis xyz="1 0 0" /> -->
+    <dynamics damping="0.1" friction="1.0" />
   </joint>
 
   <link name="front_right_wheel_link">
     <inertial>
       <origin
-        xyz="0.17 0 0"
+        xyz="0.175 0 0"
         rpy="0 1.57 0" />
-      <mass value="0.37912408551256" />
+      <mass value="0.379124506048444" />
       <inertia
-        ixx="0.0013562336762928"
-        ixy="-2.05946493125457E-08"
-        ixz="2.75615782692675E-07"
-        iyy="0.0007455386716045"
-        iyz="-2.12571382999838E-08"
-        izz="0.000744862395561634" />
+        ixx="0.00135623331658277"
+        ixy="-2.05858146537997E-08"
+        ixz="2.75425144310775E-07"
+        iyy="0.00074553860560749"
+        iyz="-2.05160697747808E-08"
+        izz="0.000744863292198173" />
     </inertial>
     <visual>
       <origin
@@ -197,14 +201,14 @@ Stephen Brawner (brawner@gmail.com)
       </geometry>
     </collision>
   </link>
-  <joint name="front_right_wheel_joint" type="continuous">
+  <joint name="front_right_wheel_joint" type="fixed">
     <origin
-      xyz="0 0 0"
-      rpy="-1.6671 0 3.1416" />
-    <parent link="front_right_steering_link" />
+      xyz="0.1 0 0"
+      rpy="1.57 3.1416 3.1416" />
+    <parent link="front_wheels_link" />
     <child link="front_right_wheel_link" />
-    <axis xyz="1 0 0" />
-    <dynamics damping="1.0" friction="2.0" />
+    <!-- <axis xyz="1 0 0" /> -->
+    <dynamics damping="0.1" friction="1.0" />
   </joint>
 
   <link name="rear_left_wheel_link">
@@ -212,14 +216,14 @@ Stephen Brawner (brawner@gmail.com)
       <origin
         xyz="-0.175 4.72112875317676E-05 9.00201436271342E-06"
         rpy="0 0 0" />
-      <mass value="0.634779873374433" />
+      <mass value="0.379124506048444" />
       <inertia
-        ixx="0.00181854534335576"
-        ixy="3.33041385279325E-07"
-        ixz="-2.8378478388468E-07"
-        iyy="0.00101390067982028"
-        iyz="-5.2299696505564E-09"
-        izz="0.00101270577373137" />
+        ixx="0.00135623331658277"
+        ixy="-2.05858146537997E-08"
+        ixz="2.75425144310775E-07"
+        iyy="0.00074553860560749"
+        iyz="-2.05160697747808E-08"
+        izz="0.000744863292198173" />
     </inertial>
     <visual>
       <origin
@@ -247,8 +251,8 @@ Stephen Brawner (brawner@gmail.com)
       rpy="1.5708 0 0" />
     <parent link="base_link" />
     <child link="rear_left_wheel_link" />
-    <axis xyz="1 0 0" />
-    <dynamics damping="1.0" friction="2.0" />
+    <axis xyz="-1 0 0" />
+    <dynamics damping="0.1" friction="1.0" />
   </joint>
 
   <link name="rear_right_wheel_link">
@@ -256,14 +260,14 @@ Stephen Brawner (brawner@gmail.com)
       <origin
         xyz="-0.175 4.72492608288855E-05 9.01686700283122E-06"
         rpy="0 0 0" />
-      <mass value="0.634778552429949" />
+      <mass value="0.379124506048444" />
       <inertia
-        ixx="0.00181854505148151"
-        ixy="3.32515010548019E-07"
-        ixz="-2.83394847813244E-07"
-        iyy="0.00101390105479182"
-        iyz="-5.03852728516005E-09"
-        izz="0.00101270465329001" />
+        ixx="0.00135623331658277"
+        ixy="-2.05858146537997E-08"
+        ixz="2.75425144310775E-07"
+        iyy="0.00074553860560749"
+        iyz="-2.05160697747808E-08"
+        izz="0.000744863292198173" />
     </inertial>
     <visual>
       <origin
@@ -288,10 +292,10 @@ Stephen Brawner (brawner@gmail.com)
   <joint name="rear_right_wheel_joint" type="continuous">
     <origin
       xyz="0.1 0.01 0.09"
-      rpy="0.17453 0 -3.1416" />
+      rpy="0 0 3.1416" />
     <parent link="base_link" />
     <child link="rear_right_wheel_link" />
     <axis xyz="1 0 0" />
-    <dynamics damping="1.0" friction="2.0" />
+    <dynamics damping="0.1" friction="1.0" />
   </joint>
 </robot>
