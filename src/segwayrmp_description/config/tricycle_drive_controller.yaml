@@ -25,9 +25,9 @@ tricycle_controller:
     odom_frame_id: odom
     base_frame_id: base_link
     publish_rate: 50.0 # publish rate of odom and tf
-    open_loop: false # if True, uses cmd_vel instead of hardware interface feedback to compute odometry
-    enable_odom_tf: true # If True, publishes odom<-base_link TF
-    odom_only_twist: false # If True, publishes on /odom only linear.x and angular.z; Useful for computing odometry in another node, e.g robot_localization's ekf
+    open_loop: False # if True, uses cmd_vel instead of hardware interface feedback to compute odometry
+    enable_odom_tf: True # If True, publishes odom<-base_link TF
+    odom_only_twist: False # If True, publishes on /odom only linear.x and angular.z; Useful for computing odometry in another node, e.g robot_localization's ekf
     pose_covariance_diagonal: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # Need to be set if fusing odom with other localization source
     twist_covariance_diagonal: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # Need to be set if fusing odom with other localization source
     velocity_rolling_window_size: 10 # Rolling window size of rcppmath::RollingMeanAccumulator applied on linear and angular speeds published on odom
@@ -35,7 +35,7 @@ tricycle_controller:
     # Rate Limiting
     traction: # All values should be positive
       # min_velocity: 0.0
-      # max_velocity: 1000.0
+      max_velocity: 2.2
       # min_acceleration: 0.0
       max_acceleration: 5.0
       # min_deceleration: 0.0

@@ -17,7 +17,7 @@ def generate_launch_description():
     package_name = 'segwayrmp_description'
     urdf_file_path = 'urdf/segwayrmp.urdf.xacro'
     rviz_config_file_path = 'rviz/default_view.rviz'
-    world_path = 'worlds/empty_world.world'
+    world_path = 'worlds/store_room.world'
 
     # Set the path to different files and folders
     pkg_gazebo_ros = FindPackageShare(package='gazebo_ros').find('gazebo_ros')
