@@ -36,6 +36,8 @@ def generate_launch_description():
         "velocity_smoother",
     ]
 
+    # Use "tricycle_controller/cmd_vel" for simulation and "cmd_vel_nav" for real world testing
+    
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
     # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
     # https://github.com/ros/geometry2/issues/32
@@ -43,7 +45,7 @@ def generate_launch_description():
     # TODO(orduno) Substitute with `PushNodeRemapping`
     #              https://github.com/ros2/launch_ros/issues/56
     remappings = [("/tf", "tf"), ("/tf_static", "tf_static")]
-
+    
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {"use_sim_time": use_sim_time, "autostart": autostart}
 
@@ -116,7 +118,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings + [("cmd_vel", "cmd_vel_nav")],
+                remappings=remappings + [("cmd_vel", "tricycle_controller/cmd_vel")],
             ),
             Node(
                 package="nav2_smoother",
@@ -183,7 +185,7 @@ def generate_launch_description():
                 parameters=[configured_params],
                 arguments=["--ros-args", "--log-level", log_level],
                 remappings=remappings
-                + [("cmd_vel", "cmd_vel_nav"), ("cmd_vel_smoothed", "cmd_vel")],
+                + [("cmd_vel", "tricycle_controller/cmd_vel"), ("cmd_vel_smoothed", "cmd_vel")],
             ),
             Node(
                 package="nav2_lifecycle_manager",
@@ -209,7 +211,7 @@ def generate_launch_description():
                 plugin="nav2_controller::ControllerServer",
                 name="controller_server",
                 parameters=[configured_params],
-                remappings=remappings + [("cmd_vel", "cmd_vel_nav")],
+                remappings=remappings + [("cmd_vel", "tricycle_controller/cmd_vel")],
             ),
             ComposableNode(
                 package="nav2_smoother",
@@ -252,7 +254,7 @@ def generate_launch_description():
                 name="velocity_smoother",
                 parameters=[configured_params],
                 remappings=remappings
-                + [("cmd_vel", "cmd_vel_nav"), ("cmd_vel_smoothed", "cmd_vel")],
+                + [("cmd_vel", "tricycle_controller/cmd_vel"), ("cmd_vel_smoothed", "cmd_vel")],
             ),
             ComposableNode(
                 package="nav2_lifecycle_manager",

@@ -47,7 +47,7 @@
       <actuated_wheel_diameter>0.2</actuated_wheel_diameter>
 
       <!-- limits -->
-      <max_wheel_torque>10</max_wheel_torque>
+      <max_wheel_torque>20</max_wheel_torque>
       <max_wheel_acceleration>10.0</max_wheel_acceleration>
       <max_steering_speed>1.0</max_steering_speed>
 
