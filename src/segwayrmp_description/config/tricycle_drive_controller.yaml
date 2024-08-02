@@ -43,8 +43,8 @@ tricycle_controller:
       # min_jerk: 0.0
       # max_jerk: 1000.0
     steering:
-      min_position: -0.36
-      max_position: 0.36
+      min_position: -0.72
+      max_position: 0.72
       # min_velocity: 0.0
       max_velocity: 1.0
       # min_acceleration: 0.0
